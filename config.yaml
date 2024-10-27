@@ -18,6 +18,10 @@ map:
 options:
   share/srt/app.py 실행파일: true
   share/srt/templates/index.html 템플릿 파일: true
+  port: 5000
 schema:
   share/srt/app.py 실행파일: bool
   share/srt/templates/index.html 템플릿 파일: bool
+  port: int
+ports:
+  5000/tcp: 5000

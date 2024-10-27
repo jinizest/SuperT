@@ -6,8 +6,11 @@ import time
 import threading
 import queue
 import os
+import logging
 
 app = Flask(__name__)
+
+
 
 def get_config(key, default=None):
     return os.environ.get(key, default)
@@ -158,6 +161,19 @@ def stream():
 
     return Response(generate(), mimetype='text/event-stream')
 
+ 
+    
 if __name__ == '__main__':
-    port = int(get_config('PORT', 5000))
-    app.run(host='0.0.0.0', port=port)
+    logging.basicConfig(format='%(levelname)s[%(asctime)s]:%(message)s ', level=logging.DEBUG)
+    logger = logging.getLogger(__name__)
+    
+    try:
+        port = int(get_config('PORT', 5000))
+        logger.info(f"Starting SRT application on port {port}")
+        app.run(host='0.0.0.0', port=port)
+    except Exception as e:
+        logger.error(f"Error starting application: {e}")
+    
+    # 애드온이 계속 실행되도록 유지
+    while True:
+        time.sleep(30)
