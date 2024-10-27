@@ -12,7 +12,7 @@ RUN python3 -m pip install requests
 RUN python3 -m pip install SRTrain
 
 # 작업 디렉토리 설정
-WORKDIR /share/srt
+WORKDIR /share
 
 # 실행 권한 부여
 RUN chmod a+x /run.sh
