@@ -1,3 +1,4 @@
+---
 name: "SRT Reservation System"
 version: "1.0.0"
 slug: "srt_reservation"
@@ -11,7 +12,7 @@ arch:
 url: https://github.com/jinizest/SuperT
 startup: application
 boot: auto
-uart: false
+uart: true
 map:
   - share:rw
 options:
