@@ -5,13 +5,15 @@ ENV LANG C.UTF-8
 # 작업 디렉토리 설정
 WORKDIR /share
 
-# 애플리케이션 파일 복사
-COPY . .
+# Copy data for add-on
+COPY run.sh app.py /
+COPY templates /templates
 
 # Install requirements for add-on
 RUN python3 -m pip install Flask==2.0.1
 RUN python3 -m pip install requests
 RUN python3 -m pip install SRTrain
+
 
 # 실행 권한 부여
 RUN chmod a+x run.sh
