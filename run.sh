@@ -5,21 +5,41 @@ SHARE_DIR=/share/srt
 # 기존 /share/srt 디렉토리가 있으면 삭제합니다.
 if [ -d "$SHARE_DIR" ]; then
     rm -rf "$SHARE_DIR"
-
-echo "[Info] mkdir!"
+    echo "[Info] 기존 디렉토리 삭제됨: $SHARE_DIR"
 fi
+
 # 새로운 /share/srt 디렉토리를 생성합니다.
 mkdir -p $SHARE_DIR
 mkdir -p $SHARE_DIR/templates
+echo "[Info] 새로운 디렉토리 생성됨: $SHARE_DIR"
 
-echo "[Info] mv /app.py!"
-# /kocom.conf 파일과 /kocom.py 파일을 /share/kocom 디렉토리로 이동시킵니다.
-mv /app.py $SHARE_DIR
-mv /templates/index.html $SHARE_DIR
+# app.py와 index.html이 존재하는지 체크 후 이동
+if [ -f /app.py ]; then
+    mv /app.py $SHARE_DIR
+    echo "[Info] /app.py를 $SHARE_DIR로 이동했습니다."
+else
+    echo "[Error] /app.py가 존재하지 않습니다."
+fi
 
-echo "[Info] Run srt macro!"
+if [ -f /templates/index.html ]; then
+    mv /templates/index.html $SHARE_DIR/templates/
+    echo "[Info] /templates/index.html을 $SHARE_DIR/templates로 이동했습니다."
+else
+    echo "[Error] /templates/index.html이 존재하지 않습니다."
+fi
+
+echo "[Info] SRT 매크로 실행 중!"
 cd $SHARE_DIR
-python3 $SHARE_DIR/app.py
 
-# for dev
-while true; do echo "still live"; sleep 100; done
+# app.py 실행
+if [ -f app.py ]; then
+    python3 app.py
+else
+    echo "[Error] app.py가 존재하지 않아 실행할 수 없습니다."
+fi
+
+# 개발용 무한 루프
+while true; do 
+    echo "여전히 실행 중"; 
+    sleep 100; 
+done
