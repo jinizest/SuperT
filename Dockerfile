@@ -15,7 +15,7 @@ RUN python3 -m pip install SRTrain
 WORKDIR /share
 
 # 실행 권한 부여
-RUN chmod a+x run.sh
+RUN chmod a+x /run.sh
 
 # 실행 명령 설정
-CMD [ "./run.sh" ]
+CMD [ "/run.sh" ]
