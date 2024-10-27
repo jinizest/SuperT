@@ -4,7 +4,6 @@ ENV LANG C.UTF-8
 
 # Copy data for add-on
 COPY run.sh app.py /
-COPY templates /templates
 
 # Install requirements for add-on
 RUN python3 -m pip install Flask==2.0.1
