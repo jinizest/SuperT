@@ -3,10 +3,10 @@ version: "1.0.0"
 slug: "srt_reservation"
 description: "SRT 예약 시스템"
 arch:
-  - armhf
-  - armv7
   - aarch64
   - amd64
+  - armhf
+  - armv7
   - i386
 startup: application
 boot: auto
