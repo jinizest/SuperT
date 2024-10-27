@@ -1,11 +1,9 @@
-ARG BUILD_FROM
-FROM $BUILD_FROM
+FROM python:3.7.3
 
-# 필요한 패키지 설치
-RUN apk add --no-cache python3 py3-pip
+ENV LANG C.UTF-8
 
 # 작업 디렉토리 설정
-WORKDIR /app
+WORKDIR /share
 
 # 필요한 Python 패키지 설치
 COPY requirements.txt .
@@ -18,4 +16,4 @@ COPY . .
 RUN chmod a+x run.sh
 
 # 실행 명령 설정
-CMD [ "/app/run.sh" ]
+CMD [ "/run.sh" ]

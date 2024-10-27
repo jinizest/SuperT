@@ -1,0 +1,22 @@
+name: "SRT Reservation System"
+version: "1.0.0"
+slug: "srt_reservation"
+description: "SRT 예약 시스템"
+arch:
+  - armhf
+  - armv7
+  - aarch64
+  - amd64
+  - i386
+url: https://github.com/jinizest/SuperT
+startup: application
+boot: auto
+uart: false
+map:
+  - share:rw
+options:
+  share/srt/app.py 실행파일: true
+  share/srt/templates/index.html 템플릿 파일: true
+schema:
+  share/srt/app.py 실행파일: bool
+  share/srt/templates/index.html 템플릿 파일: bool
