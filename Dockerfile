@@ -2,9 +2,6 @@ FROM python:3.7.3
 
 ENV LANG C.UTF-8
 
-# 작업 디렉토리 설정
-WORKDIR /share
-
 # Copy data for add-on
 COPY run.sh app.py /
 COPY templates /templates
@@ -14,6 +11,8 @@ RUN python3 -m pip install Flask==2.0.1
 RUN python3 -m pip install requests
 RUN python3 -m pip install SRTrain
 
+# 작업 디렉토리 설정
+WORKDIR /share
 
 # 실행 권한 부여
 RUN chmod a+x run.sh
