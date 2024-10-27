@@ -18,4 +18,4 @@ WORKDIR /share
 RUN chmod a+x run.sh
 
 # 실행 명령 설정
-CMD [ "/share/run.sh" ]
+CMD [ "./run.sh" ]
