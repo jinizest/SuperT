@@ -10,7 +10,7 @@ COPY templates /templates
 RUN python3 -m pip install Flask==2.0.1
 RUN python3 -m pip install requests
 RUN python3 -m pip install SRTrain
-RUN python3 -m pip install urllib3<2.0
+RUN python3 -m pip install urllib3==1.26.15
 
 # 작업 디렉토리 설정
 WORKDIR /share
