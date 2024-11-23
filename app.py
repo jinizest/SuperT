@@ -23,6 +23,7 @@ SRT_ID = get_config('SRT_ID', '')
 SRT_PASSWORD = get_config('SRT_PASSWORD', '')
 TELEGRAM_BOT_TOKEN = get_config('TELEGRAM_BOT_TOKEN', '')
 TELEGRAM_CHAT_ID = get_config('TELEGRAM_CHAT_ID', '')
+PHONE_NUMBER = get_config('PHONE_NUMBER', '')
 
 def send_telegram_message(bot_token, chat_id, message):
     if bot_token and chat_id:
@@ -151,7 +152,8 @@ def index():
         'srt_id': SRT_ID,
         'srt_password': SRT_PASSWORD,
         'telegram_bot_token': TELEGRAM_BOT_TOKEN,
-        'telegram_chat_id': TELEGRAM_CHAT_ID
+        'telegram_chat_id': TELEGRAM_CHAT_ID,
+        'phone_number': PHONE_NUMBER
     }
     return render_template('index.html', **default_values)
 
