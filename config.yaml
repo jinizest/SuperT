@@ -20,9 +20,17 @@ options:
   share/srt/app.py 실행파일: true
   share/srt/templates/index.html 템플릿 파일: true
   port: 5000
+  srt_id: ""
+  srt_password: ""
+  telegram_bot_token: ""
+  telegram_chat_id: ""
 schema:
   share/srt/app.py 실행파일: bool
   share/srt/templates/index.html 템플릿 파일: bool
   port: int
+  srt_id: str?
+  srt_password: password?
+  telegram_bot_token: str?
+  telegram_chat_id: str?
 ports:
   5000/tcp: 5000
