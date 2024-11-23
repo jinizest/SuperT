@@ -20,22 +20,22 @@ options:
   share/srt/app.py 실행파일: true
   share/srt/templates/index.html 템플릿 파일: true
   port: 5000
-  srt_id: ""
-  srt_password: ""
-  telegram_bot_token: ""
-  telegram_chat_id: ""
-  PHONE_NUMBER:
-    name: "휴대폰 번호"
-    description: "휴대폰 번호를 입력하세요 (예: 010-1234-5678)"
-    type: str?
+  SRT_ID: ""
+  SRT_PASSWORD: ""
+  TELEGRAM_BOT_TOKEN: ""
+  TELEGRAM_CHAT_ID: ""
+  PHONE_NUMBER: ""
 schema:
   share/srt/app.py 실행파일: bool
   share/srt/templates/index.html 템플릿 파일: bool
   port: int
-  srt_id: str?
-  srt_password: password?
-  telegram_bot_token: str?
-  telegram_chat_id: str?
-  PHONE_NUMBER: str?
+  SRT_ID: str
+  SRT_PASSWORD: password
+  TELEGRAM_BOT_TOKEN: str?
+  TELEGRAM_CHAT_ID: str?
+  PHONE_NUMBER:
+    name: "휴대폰 번호"
+    description: "휴대폰 번호를 입력하세요 (예: 010-1234-5678)"
+    type: str?
 ports:
   5000/tcp: 5000
