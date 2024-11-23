@@ -7,18 +7,29 @@ import threading
 import queue
 import os
 import logging
+import configparser
 
 app = Flask(__name__)
 
 def get_config(key, default=None):
-    return os.environ.get(key, default)
+    config = configparser.ConfigParser()
+    config_file = '/share/srt/app.conf'
+    if os.path.exists(config_file):
+        config.read(config_file)
+        try:
+            return config.get('DEFAULT', key)
+        except (configparser.NoSectionError, configparser.NoOptionError):
+            return default
+    else:
+        print(f"설정 파일을 찾을 수 없습니다: {config_file}")
+        return default
 
 global messages, stop_reservation, output_queue
 messages = []
 stop_reservation = False
 output_queue = queue.Queue()
 
-# 환경 변수에서 설정 값 가져오기
+# 설정 값 가져오기
 SRT_ID = get_config('srt_id', '')
 SRT_PASSWORD = get_config('srt_password', '')
 TELEGRAM_BOT_TOKEN = get_config('telegram_bot_token', '')
