@@ -33,8 +33,7 @@ schema:
   srt_password: password?
   telegram_bot_token: str?
   telegram_chat_id: str?
-  phone_number:
-    type: str?
+  phone_number: str?
     name: "휴대폰 번호"
     description: "휴대폰 번호를 입력하세요 (예: 010-1234-5678)"
 ports:
