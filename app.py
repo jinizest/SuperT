@@ -24,11 +24,11 @@ SRT_PASSWORD = get_config('SRT_PASSWORD', '')
 TELEGRAM_BOT_TOKEN = get_config('TELEGRAM_BOT_TOKEN', '')
 TELEGRAM_CHAT_ID = get_config('TELEGRAM_CHAT_ID', '')
 
-def send_telegram_message(message):
-    if TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID:
-        url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+def send_telegram_message(bot_token, chat_id, message):
+    if bot_token and chat_id:
+        url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
         payload = {
-            "chat_id": TELEGRAM_CHAT_ID,
+            "chat_id": chat_id,
             "text": 'SRTrain Rev \n' + message + ' \n@' + datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         }
         response = requests.post(url, data=payload)
@@ -37,7 +37,7 @@ def send_telegram_message(message):
         else:
             print("메시지 전송에 실패했습니다. 상태 코드:", response.status_code)
 
-def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, time_end, phone_number, enable_telegram):
+def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, time_end, phone_number, enable_telegram, bot_token, chat_id):
     global messages, stop_reservation
     
     while not stop_reservation:
@@ -72,7 +72,7 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
                             output_queue.put(success_message)
                             
                             if enable_telegram:
-                                send_telegram_message(success_message)
+                                send_telegram_message(bot_token, chat_id, success_message)
                             
                             # 예약 성공 후에도 계속 진행
                             print("예약 성공했지만 계속 진행합니다.")
@@ -96,7 +96,7 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
                         continue  # while 루프 재시작
                     
                     if enable_telegram:
-                        send_telegram_message(error_message)
+                        send_telegram_message(bot_token, chat_id, error_message)
                     
                     time.sleep(5)
                     srt = SRT(sid, spw, verbose=False)
@@ -109,7 +109,7 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
             messages.append(critical_error)
             
             if enable_telegram:
-                send_telegram_message(critical_error)
+                send_telegram_message(bot_token, chat_id, critical_error)
             
             time.sleep(30)  # 다시 시도하기 전에 충분히 기다림
             srt = SRT(sid, spw, verbose=True)
@@ -141,7 +141,7 @@ def index():
         chat_id = request.form.get('chat_id', TELEGRAM_CHAT_ID)
 
         # 스레드로 예약 함수 실행
-        thread = threading.Thread(target=attempt_reservation, args=(sid, spw, dep_station, arr_station, date, start_time, end_time, phone_number, enable_telegram))
+        thread = threading.Thread(target=attempt_reservation, args=(sid, spw, dep_station, arr_station, date, start_time, end_time, phone_number, enable_telegram, bot_token, chat_id))
         thread.start()
 
         return jsonify({'message': '예약 프로세스가 시작되었습니다.'})
