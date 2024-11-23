@@ -13,7 +13,7 @@
             padding: 10px;
             margin: 0 auto;
             max-width: 500px;
-            width: 500px;
+            width: 100%;
             box-sizing: border-box;
         }
         h1 {
@@ -53,6 +53,12 @@
             background-color: #808080;
             color: white;
             width: 80px !important;
+            height: 45px !important;
+            font-size: 15px !important;
+            padding: 0 !important;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         .input-container {
             display: flex;
@@ -145,18 +151,15 @@
             margin-top: 20px;
             box-sizing: border-box;
         }
-        
         #start_hour, #start_minute, #end_hour, #end_minute {
             width: 50px !important;
             padding: 0 5px;
             text-align: left;
         }
-        
         #enable_telegram {
             width: 18px;
             height: 18px;
         }
-        
         .button-container {
             display: flex;
             justify-content: space-between;
@@ -164,9 +167,13 @@
             width: 100%;
             box-sizing: border-box;
         }
-        
         .search-button {
             width: 350px !important;
+        }
+        @media (min-width: 501px) {
+            body {
+                width: 500px;
+            }
         }
     </style>
     <script>
@@ -227,13 +234,11 @@
             var today = new Date();
             var dateInput = document.getElementById('date');
             var days = ['일', '월', '화', '수', '목', '금', '토'];
-            
             dateInput.addEventListener('change', function() {
                 var selectedDate = new Date(this.value);
                 var dayOfWeek = days[selectedDate.getDay()];
                 this.title = `${this.value} (${dayOfWeek})`;
             });
-
             var formattedDate = today.toISOString().split('T')[0];
             dateInput.value = formattedDate;
             var initialDayOfWeek = days[today.getDay()];
@@ -245,15 +250,22 @@
             var currentHour = today.getHours();
             var currentMinute = today.getMinutes();
             var roundedMinute = Math.floor(currentMinute / 10) * 10;
-
             document.getElementById('start_hour').value = currentHour.toString().padStart(2, '0');
             document.getElementById('start_minute').value = roundedMinute.toString().padStart(2, '0');
-
             var endHour = (currentHour + 1) % 24;
             document.getElementById('end_hour').value = endHour.toString().padStart(2, '0');
             document.getElementById('end_minute').value = '00';
 
             document.getElementsByName('phone_part1')[0].value = '010';
+
+            document.getElementById('sid').value = '{{ srt_id }}';
+            document.getElementById('spw').value = '{{ srt_password }}';
+            document.getElementById('bot_token').value = '{{ telegram_bot_token }}';
+            document.getElementById('chat_id').value = '{{ telegram_chat_id }}';
+            
+            var enableTelegram = document.getElementById('enable_telegram');
+            enableTelegram.checked = '{{ telegram_bot_token }}' && '{{ telegram_chat_id }}';
+            toggleTelegramFields();
         }
 
         var outputSource = new EventSource("/stream");
@@ -267,7 +279,6 @@
             var botTokenInput = document.getElementById('bot_token');
             var chatIdInput = document.getElementById('chat_id');
             var showInput = document.getElementById('show_input');
-
             if (showInput.checked) {
                 botTokenInput.type = 'text';
                 chatIdInput.type = 'text';
@@ -275,23 +286,19 @@
                 botTokenInput.type = 'password';
                 chatIdInput.type = 'password';
             }
-        } 
-        
+        }
+
         function swapStations() {
             var depStation = document.getElementById('dep_station');
             var arrStation = document.getElementById('arr_station');
             var customDepStation = document.getElementById('customDepStation');
             var customArrStation = document.getElementById('customArrStation');
-        
             var tempValue = depStation.value;
             var tempCustomValue = customDepStation.value;
-        
             depStation.value = arrStation.value;
             customDepStation.value = customArrStation.value;
-        
             arrStation.value = tempValue;
             customArrStation.value = tempCustomValue;
-        
             toggleInputField('dep_station', 'customDepStation');
             toggleInputField('arr_station', 'customArrStation');
         }
@@ -311,7 +318,6 @@
                     <input type="password" id="spw" name="spw" required>
                 </div>
             </div>
-
             <div class="station-container">
                 <div class="station-select">
                     <label for="dep_station">출발역:</label>
@@ -327,9 +333,7 @@
                     </select>
                     <input type="text" id="customDepStation" name="customDepStation" style="display:none;" placeholder="출발역 입력">
                 </div>
-        
                 <button type="button" onclick="swapStations()" class="swap-button">⇄</button>
-        
                 <div class="station-select">
                     <label for="arr_station">도착역:</label>
                     <select id="arr_station" name="arr_station" onchange="toggleInputField('arr_station', 'customArrStation')">
@@ -345,54 +349,46 @@
                     <input type="text" id="customArrStation" name="customArrStation" style="display:none;" placeholder="도착역 입력">
                 </div>
             </div>
-
             <div class="input-container">
-                <label for='date'>출발 날짜:</label> 
-                <input type='date' id='date' name='date' class='cal-select' required> 
+                <label for='date'>출발 날짜:</label>
+                <input type='date' id='date' name='date' class='cal-select' required>
             </div>
-
             <div class='input-container'>
-                <label for='start_hour'>시작 시간:</label> 
+                <label for='start_hour'>시작 시간:</label>
                 <select id='start_hour' name='start_hour' class='small-select'>
                     {% for hour in range(24) %}
-                        <option value="{{ '%02d' % hour }}">{{ '%02d' % hour }}</option> 
+                    <option value="{{ '%02d' % hour }}">{{ '%02d' % hour }}</option>
                     {% endfor %}
-                </select> 
-
+                </select>
                 <select id='start_minute' name='start_minute' class='small-select'>
                     {% for minute in range(0, 60, 10) %}
-                        <option value="{{ '%02d' % minute }}">{{ '%02d' % minute }}</option> 
+                    <option value="{{ '%02d' % minute }}">{{ '%02d' % minute }}</option>
                     {% endfor %}
-                </select> 
-
-                <label for='end_hour'>종료 시간:</label> 
+                </select>
+                <label for='end_hour'>종료 시간:</label>
                 <select id='end_hour' name='end_hour' class='small-select'>
                     {% for hour in range(24) %}
-                        <option value="{{ '%02d' % hour }}">{{ '%02d' % hour }}</option> 
+                    <option value="{{ '%02d' % hour }}">{{ '%02d' % hour }}</option>
                     {% endfor %}
-                </select> 
-
+                </select>
                 <select id='end_minute' name='end_minute' class='small-select'>
                     {% for minute in range(0, 60, 10) %}
-                        <option value="{{ '%02d' % minute }}">{{ '%02d' % minute }}</option> 
+                    <option value="{{ '%02d' % minute }}">{{ '%02d' % minute }}</option>
                     {% endfor %}
-                </select> 
+                </select>
             </div>
-
-            <div class='input-container'> 
-                <label>휴대폰 번호:</label> 
-                <input type='text' name='phone_part1' size='3' maxlength='3' class='small-input' value='010'> ━ 
-                <input type='text' name='phone_part2' size='4' maxlength='4' class='small-input'> ━ 
-                <input type='text' name='phone_part3' size='4' maxlength='4' class='small-input'><br> 
+            <div class='input-container'>
+                <label>휴대폰 번호:</label>
+                <input type='text' name='phone_part1' size='3' maxlength='3' class='small-input' value='010'>
+                ━
+                <input type='text' name='phone_part2' size='4' maxlength='4' class='small-input'>
+                ━
+                <input type='text' name='phone_part3' size='4' maxlength='4' class='small-input'>
             </div>
-
-
-
             <div class='input-container'>
                 <label>텔레그램 알림 봇 사용:</label>
                 <input type='checkbox' id='enable_telegram' name='enable_telegram' onclick='toggleTelegramFields()'>
             </div>
-
             <div id='telegram_fields' style='display:none;'>
                 <div class="input-container">
                     <label>Bot Token:</label>
@@ -407,13 +403,11 @@
                     <input type='checkbox' id='show_input' onchange='toggleInputVisibility()'>
                 </div>
             </div>
-
             <div class="button-container">
-                <button type='submit' class="search-button">검색하기</button> 
+                <button type='submit' class="search-button">검색하기</button>
                 <button type='button' id='stopButton' class='stop-button' onclick='stopReservation()' disabled>중단</button>
             </div>
         </form>
-
         <div id='results'></div>
         <div id="output" style="height: 300px; overflow-y: scroll; border: 1px solid #ccc; padding: 10px; margin-top: 20px;"></div>
     </main>
