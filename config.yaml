@@ -24,6 +24,7 @@ options:
   srt_password: ""
   telegram_bot_token: ""
   telegram_chat_id: ""
+  phone_number: ""
 schema:
   share/srt/app.py 실행파일: bool
   share/srt/templates/index.html 템플릿 파일: bool
@@ -32,5 +33,9 @@ schema:
   srt_password: password?
   telegram_bot_token: str?
   telegram_chat_id: str?
+  phone_number:
+    type: str?
+    name: "휴대폰 번호"
+    description: "휴대폰 번호를 입력하세요 (예: 010-1234-5678)"
 ports:
   5000/tcp: 5000
