@@ -379,11 +379,11 @@
             </div>
             <div class='input-container'>
                 <label>휴대폰 번호:</label>
-                <input type='text' name='phone_part1' size='3' maxlength='3' class='small-input' value='010'>
+                <input type='text' name='phone_part1' size='3' maxlength='3' class='small-input' value='{{ phone_number.split("-")[0] }}'>
                 ━
-                <input type='text' name='phone_part2' size='4' maxlength='4' class='small-input'>
+                <input type='text' name='phone_part2' size='4' maxlength='4' class='small-input' value='{{ phone_number.split("-")[1] }}'>
                 ━
-                <input type='text' name='phone_part3' size='4' maxlength='4' class='small-input'>
+                <input type='text' name='phone_part3' size='4' maxlength='4' class='small-input' value='{{ phone_number.split("-")[2] }}'>
             </div>
             <div class='input-container'>
                 <label>텔레그램 알림 봇 사용:</label>
