@@ -19,11 +19,11 @@ stop_reservation = False
 output_queue = queue.Queue()
 
 # 환경 변수에서 설정 값 가져오기
-SRT_ID = get_config('SRT_ID', '')
-SRT_PASSWORD = get_config('SRT_PASSWORD', '')
-TELEGRAM_BOT_TOKEN = get_config('TELEGRAM_BOT_TOKEN', '')
-TELEGRAM_CHAT_ID = get_config('TELEGRAM_CHAT_ID', '')
-PHONE_NUMBER = get_config('PHONE_NUMBER', '')
+SRT_ID = get_config('srt_id', '')
+SRT_PASSWORD = get_config('srt_password', '')
+TELEGRAM_BOT_TOKEN = get_config('telegram_bot_token', '')
+TELEGRAM_CHAT_ID = get_config('telegram_chat_id', '')
+PHONE_NUMBER = get_config('phone_number', '')
 
 def send_telegram_message(bot_token, chat_id, message):
     if bot_token and chat_id:
