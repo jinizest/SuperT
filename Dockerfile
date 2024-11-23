@@ -3,7 +3,7 @@ FROM python:3.7.3
 ENV LANG C.UTF-8
 
 # Copy data for add-on
-COPY run.sh app.py /
+COPY run.sh makeconf.sh app.py /
 COPY templates /templates
 
 # Install requirements for add-on
