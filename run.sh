@@ -14,7 +14,6 @@ mkdir -p $SHARE_DIR/templates
 echo "[Info] 새로운 디렉토리 생성됨: $SHARE_DIR"
 
 # 설정파일 생성 및 복사이동
-fi
 /makeconf.sh
 
 # app.py와 index.html이 존재하는지 체크 후 이동
