@@ -31,9 +31,9 @@ fi
 echo "[Info] SRT 매크로 실행 중!"
 cd $SHARE_DIR
 
-# app.py 실행
+# app.py 실행 (모든 인터페이스에서 수신하도록 설정)
 if [ -f app.py ]; then
-    python3 app.py
+    python3 app.py --host 0.0.0.0 --port 5000
 else
     echo "[Error] app.py가 존재하지 않아 실행할 수 없습니다."
 fi
