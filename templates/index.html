@@ -311,11 +311,11 @@
             <div class="login-container">
                 <div class="input-group">
                     <label for="sid">SRT ID:</label>
-                    <input type="text" id="sid" name="sid" required>
+                    <input type="text" id="sid" name="sid" value="{{ srt_id }}" required>
                 </div>
                 <div class="input-group">
                     <label for="spw">비밀번호:</label>
-                    <input type="password" id="spw" name="spw" required>
+                    <input type="password" id="spw" name="spw" value="{{ srt_password }}" required>
                 </div>
             </div>
             <div class="station-container">
@@ -392,11 +392,11 @@
             <div id='telegram_fields' style='display:none;'>
                 <div class="input-container">
                     <label>Bot Token:</label>
-                    <input class='small-text large-input' type='password' name='bot_token' id='bot_token'>
+                    <input class='small-text large-input' type='password' name='bot_token' id='bot_token' value='{{ telegram_bot_token }}'>
                 </div>
                 <div class="input-container">
                     <label>Chat ID:</label>
-                    <input class='small-text medium-input' type='password' name='chat_id' id='chat_id'>
+                    <input class='small-text medium-input' type='password' name='chat_id' id='chat_id' value='{{ telegram_chat_id }}'>
                 </div>
                 <div class="input-container">
                     <label>입력 내용 보기:</label>
