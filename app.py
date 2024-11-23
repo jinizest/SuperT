@@ -146,7 +146,14 @@ def index():
 
         return jsonify({'message': '예약 프로세스가 시작되었습니다.'})
 
-    return render_template('index.html')
+    # GET 요청 처리
+    default_values = {
+        'srt_id': SRT_ID,
+        'srt_password': SRT_PASSWORD,
+        'telegram_bot_token': TELEGRAM_BOT_TOKEN,
+        'telegram_chat_id': TELEGRAM_CHAT_ID
+    }
+    return render_template('index.html', **default_values)
 
 @app.route('/stop', methods=['POST'])
 def stop():
