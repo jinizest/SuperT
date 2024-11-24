@@ -51,91 +51,88 @@ def send_telegram_message(bot_token, chat_id, message):
 
 def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, time_end, phone_number, enable_telegram, bot_token, chat_id):
     global messages, stop_reservation
-    
-    while not stop_reservation:
-        try:
-            srt = SRT(sid, spw, verbose=False)
-            
-            while not stop_reservation:
-                try:
-                    message = '예약시도.....' + ' @' + datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-                    logging.info(message)
+    try:
+        srt = SRT(sid, spw, verbose=False)
+        while not stop_reservation:
+            try:
+                message = '예약시도.....' + ' @' + datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                logging.info(message)
+                output_queue.put(message)
+                time.sleep(1)
+                
+                # 기차 검색
+                trains = srt.search_train(dep_station, arr_station, date, time_start, time_end, available_only=False)
+                
+                if 'Expecting value' in str(trains):
+                    message = 'Expecting value 오류'
+                    logging.error(message)
                     output_queue.put(message)
-                    time.sleep(1)
-
-                    # 기차 검색
-                    trains = srt.search_train(dep_station, arr_station, date, time_start, time_end, available_only=False)
-                    if 'Expecting value' in str(trains):
-                        message = 'Expecting value 오류'
-                        logging.error(message)
+                    messages.append(message)
+                    continue
+                
+                for train in trains:
+                    logging.info(str(train))
+                    output_queue.put(str(train))
+                
+                for train in trains:
+                    if stop_reservation:
+                        break
+                    try:
+                        # message = '조회' + ' @' + datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                        logging.info(message)
                         output_queue.put(message)
-                        messages.append(message)
-                        continue
-                    
-                    for train in trains:
-                        logging.info(str(train))
-                        output_queue.put(str(train))
-
-                    for train in trains:
-                        if stop_reservation:
-                            break
-                        try:
-                            # 대기 예약 시도
-                            # message = '조회' + ' @' + datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-                            logging.info(message)
-                            output_queue.put(message)
-                            srt.reserve_standby(train)
-                            srt.reserve_standby_option_settings(phone_number, True, True)
-                            success_message = f"SRT 예약 대기 완료 {train}"
-                            messages.append(success_message)
-                            output_queue.put(success_message)
-                            
-                            if enable_telegram:
-                                send_telegram_message(bot_token, chat_id, success_message)
-                            
-                            logging.info("예약 성공했지만 계속 진행합니다.")
-                            break  # 현재 검색된 열차에 대한 루프만 종료
-                        
-                        except Exception as e:
-                            error_message = f"열차 {train}에 대한 오류 발생: {e}"
-                            logging.error(error_message)
-                            output_queue.put(error_message)
-                            messages.append(error_message)
-
-                except Exception as e:
-                    error_message = f"메인 루프에서 오류 발생: {e}"
-                    logging.error(error_message)
-                    output_queue.put(error_message)
-                    messages.append(error_message)
-                    
-                    if '사용자가 많아 접속이 원활하지 않습니다.' in str(e):
-                        time.sleep(5)  # 서버 과부하로 인한 재시도
-                        srt = SRT(sid, spw, verbose=False)
-                        continue  # while 루프 재시작
-                    
-                    if enable_telegram:
-                        send_telegram_message(bot_token, chat_id, error_message)
-                    
-                    time.sleep(5)
+                        srt.reserve_standby(train)
+                        srt.reserve_standby_option_settings(phone_number, True, True)
+                        success_message = f"SRT 예약 대기 완료 {train}"
+                        messages.append(success_message)
+                        output_queue.put(success_message)
+                        if enable_telegram:
+                            send_telegram_message(bot_token, chat_id, success_message)
+                        logging.info("예약 성공했지만 계속 진행합니다.")
+                        break  # 현재 검색된 열차에 대한 루프만 종료
+                    except Exception as e:
+                        error_message = f"열차 {train}에 대한 오류 발생: {e}"
+                        logging.error(error_message)
+                        output_queue.put(error_message)
+                        messages.append(error_message)
+            except Exception as e:
+                error_message = f"메인 루프에서 오류 발생: {e}"
+                logging.error(error_message)
+                output_queue.put(error_message)
+                messages.append(error_message)
+                if '사용자가 많아 접속이 원활하지 않습니다.' in str(e):
+                    time.sleep(5)  # 서버 과부하로 인한 재시도
                     srt = SRT(sid, spw, verbose=False)
-
-        except Exception as main_e:
-            critical_error = f"심각한 오류 발생: {main_e}"
-            logging.critical(critical_error)
-            output_queue.put(critical_error)
-            messages.append(critical_error)
-            
-            if enable_telegram:
-                send_telegram_message(bot_token, chat_id, critical_error)
-            
-            time.sleep(30)  # 다시 시도하기 전에 충분히 기다림
-            srt = SRT(sid, spw, verbose=True)
-
+                    continue  # while 루프 재시작
+                if enable_telegram:
+                    send_telegram_message(bot_token, chat_id, error_message)
+                time.sleep(5)
+                srt = SRT(sid, spw, verbose=False)
+    except Exception as main_e:
+        critical_error = f"심각한 오류 발생: {main_e}"
+        logging.critical(critical_error)
+        output_queue.put(critical_error)
+        messages.append(critical_error)
+        if enable_telegram:
+            send_telegram_message(bot_token, chat_id, critical_error)
+        time.sleep(30)  # 다시 시도하기 전에 충분히 기다림
+        srt = SRT(sid, spw, verbose=True)
+    finally:
+        stop_reservation = False  # 프로세스 종료 시 초기화
+        if 'srt' in locals():
+            srt.logout()  # SRT 세션 종료
     return messages
+
+reservation_thread = None
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
+    global reservation_thread, stop_reservation
     if request.method == 'POST':
+        if reservation_thread and reservation_thread.is_alive():
+            return jsonify({'message': '이미 예약 프로세스가 실행 중입니다.'})
+        
+        stop_reservation = False  # 새로운 예약 시작 시 초기화
         sid = request.form.get('sid', SRT_ID)
         spw = request.form.get('spw', SRT_PASSWORD)
         dep_station = request.form['dep_station']
@@ -156,8 +153,8 @@ def index():
         bot_token = request.form.get('bot_token', TELEGRAM_BOT_TOKEN)
         chat_id = request.form.get('chat_id', TELEGRAM_CHAT_ID)
 
-        thread = threading.Thread(target=attempt_reservation, args=(sid, spw, dep_station, arr_station, date, start_time, end_time, phone_number, enable_telegram, bot_token, chat_id))
-        thread.start()
+        reservation_thread = threading.Thread(target=attempt_reservation, args=(sid, spw, dep_station, arr_station, date, start_time, end_time, phone_number, enable_telegram, bot_token, chat_id))
+        reservation_thread.start()
 
         return jsonify({'message': '예약 프로세스가 시작되었습니다.'})
 
@@ -174,17 +171,30 @@ def index():
 def stop():
     global stop_reservation
     stop_reservation = True
+    # SRT 객체가 존재한다면 로그아웃
+    if 'srt' in globals():
+        srt.logout()
     return jsonify({'message': '예약 프로세스가 중단되었습니다.'})
 
 @app.route('/stream')
 def stream():
     def generate():
+        log_stream = io.StringIO()
+        handler = logging.StreamHandler(log_stream)
+        app.logger.addHandler(handler)
+        
         while True:
-            try:
-                message = output_queue.get(timeout=1)
-                yield f"data: {message}\n\n"
-            except queue.Empty:
-                pass
+            log_stream.seek(0)
+            log_content = log_stream.read()
+            log_stream.truncate(0)
+            log_stream.seek(0)
+            
+            if log_content:
+                log_lines = log_content.strip().split('\n')
+                log_lines.reverse()  # 로그 라인을 역순으로 정렬
+                yield f"data: {'\n'.join(log_lines)}\n\n"
+            else:
+                time.sleep(1)
 
     return Response(generate(), mimetype='text/event-stream')
 
