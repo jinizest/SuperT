@@ -9,7 +9,6 @@ import os
 import logging
 import configparser
 import io
-import json
 
 app = Flask(__name__)
 
@@ -173,20 +172,17 @@ def stream():
         formatter = logging.Formatter('%(asctime)s.%(msecs)03d - %(levelname)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
         handler.setFormatter(formatter)
         logging.getLogger().addHandler(handler)
-        
         last_timestamp = datetime.now()
-        buffer = []
-        
+
         while True:
             log_stream.seek(0)
             log_content = log_stream.read()
             log_stream.truncate(0)
             log_stream.seek(0)
-            
+
             if log_content:
                 log_lines = log_content.strip().split('\n')
                 new_logs = []
-                
                 for line in log_lines:
                     try:
                         timestamp_str = line.split(' - ')[0]
@@ -195,18 +191,16 @@ def stream():
                             new_logs.append(line)
                             last_timestamp = timestamp
                     except (ValueError, IndexError):
-                        continue
-                
-                if new_logs:
-                    buffer.extend(new_logs)
-                    buffer.sort(key=lambda x: datetime.strptime(x.split(' - ')[0], '%Y-%m-%d %H:%M:%S.%f'), reverse=True)
-                    buffer = buffer[:1000]  # 최근 1000개 로그만 유지
-                    yield f"data: {json.dumps(buffer)}\n\n"
-            else:
-                time.sleep(0.1)
-    
-    return Response(generate(), mimetype='text/event-stream')
+                        continue  # 잘못된 형식의 로그 라인은 무시
 
+                if new_logs:
+                    new_logs.reverse()
+                    newline = '\n'
+                    yield f"data: {newline.join(new_logs)}\n\n"
+            else:
+                time.sleep(0.1)  # 0.1초마다 확인
+
+    return Response(generate(), mimetype='text/event-stream')
 
 if __name__ == '__main__':
     log_level = get_config('LOG_LEVEL', 'INFO').upper()
@@ -217,7 +211,7 @@ if __name__ == '__main__':
     )
     logger = logging.getLogger(__name__)
     try:
-        port = int(get_config('port', 5000))
+        port = int(get_config('PORT', 5000))
         logger.info(f"Starting SRT application on port {port}")
         app.run(host='0.0.0.0', port=port)
     except Exception as e:
