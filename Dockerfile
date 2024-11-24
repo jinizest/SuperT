@@ -16,7 +16,9 @@ RUN python3 -m pip install urllib3==1.26.15
 WORKDIR /share
 
 # 실행 권한 부여
+RUN chmod a+x /makeconf.sh
 RUN chmod a+x /run.sh
+
 
 # 실행 명령 설정
 CMD [ "/run.sh" ]
