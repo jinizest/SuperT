@@ -192,7 +192,8 @@ def stream():
             if log_content:
                 log_lines = log_content.strip().split('\n')
                 log_lines.reverse()  # 로그 라인을 역순으로 정렬
-                yield f"data: {r'\n'.join(log_lines)}\n\n"
+                newline = '\n'
+                yield f"data: {newline.join(log_lines)}\n\n"
             else:
                 time.sleep(1)
 
