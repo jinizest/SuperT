@@ -169,25 +169,30 @@ def stream():
     def generate():
         log_stream = io.StringIO()
         handler = logging.StreamHandler(log_stream)
+        formatter = logging.Formatter('%(asctime)s.%(msecs)03d - %(levelname)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+        handler.setFormatter(formatter)
         logging.getLogger().addHandler(handler)
+        last_position = 0
         while True:
-            log_stream.seek(0)
+            log_stream.seek(last_position)
             log_content = log_stream.read()
-            log_stream.truncate(0)
-            log_stream.seek(0)
             if log_content:
                 log_lines = log_content.strip().split('\n')
                 log_lines.reverse()
                 newline = '\n'
                 yield f"data: {newline.join(log_lines)}\n\n"
+                last_position = log_stream.tell()
             else:
-                time.sleep(1)
+                time.sleep(0.1)  # 0.1초마다 확인
     return Response(generate(), mimetype='text/event-stream')
 
 if __name__ == '__main__':
     log_level = get_config('LOG_LEVEL', 'INFO').upper()
-    logging.basicConfig(format='%(levelname)s[%(asctime)s]:%(message)s ',
-                        level=getattr(logging, log_level))
+    logging.basicConfig(
+        format='%(asctime)s.%(msecs)03d - %(levelname)s - %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S',
+        level=getattr(logging, log_level)
+    )
     logger = logging.getLogger(__name__)
     try:
         port = int(get_config('PORT', 5000))
