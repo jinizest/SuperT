@@ -265,7 +265,7 @@
                 alert(data.message);
                 isReservationRunning = false;
                 document.getElementById('stopButton').disabled = true;
-                document.getElementById('results').innerHTML = '예약이 중지되었습니다: ' + data.message;
+                document.getElementById('results').innerHTML = data.message;
             })
             .catch(error => {
                 console.error('Error:', error);
