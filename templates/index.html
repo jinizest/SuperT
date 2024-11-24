@@ -250,14 +250,16 @@
             .then(response => response.json())
             .then(data => {
                 document.getElementById('results').innerHTML = data.message;
+                document.getElementById('status').innerHTML = "예약 프로세스가 진행 중입니다...";
             })
             .catch(error => {
                 console.error('Error:', error);
                 isReservationRunning = false;
                 document.getElementById('stopButton').disabled = true;
+                document.getElementById('status').innerHTML = "오류가 발생했습니다.";
             });
         }
-
+        
         function stopReservation() {
             fetch('/stop', {method: 'POST'})
             .then(response => response.json())
@@ -265,6 +267,7 @@
                 alert(data.message);
                 isReservationRunning = false;
                 document.getElementById('stopButton').disabled = true;
+                document.getElementById('status').innerHTML = "예약 프로세스가 중단되었습니다.";
             })
             .catch(error => console.error('Error:', error));
         }
@@ -310,14 +313,16 @@
         var outputSource = new EventSource("/stream");
         outputSource.onmessage = function(event) {
             var outputDiv = document.getElementById("output");
-            var newLogs = JSON.parse(event.data);
-            outputDiv.innerHTML = ''; // 기존 로그 삭제
+            var newLogs = event.data.split('\n').filter(Boolean);
             newLogs.forEach(function(log) {
                 var logElement = document.createElement('div');
                 logElement.textContent = log;
-                outputDiv.appendChild(logElement);
+                outputDiv.insertBefore(logElement, outputDiv.firstChild);
             });
-        };
+            while (outputDiv.childElementCount > 1000) {
+                outputDiv.removeChild(outputDiv.lastChild);
+            }
+        };        
 
         function toggleInputVisibility() {
             var botTokenInput = document.getElementById('bot_token');
