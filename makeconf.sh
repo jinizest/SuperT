@@ -8,24 +8,14 @@ if [ ! -f "$CONFIG_FILE" ]; then
     exit 1
 fi
 
-CONFIG=`cat $CONFIG_FILE`
+CONFIG=$(cat "$CONFIG_FILE")
 echo "[Info] 설정 파일을 성공적으로 읽었습니다: $CONFIG_FILE"
 
-> $CONFIG_srtapp
+> "$CONFIG_srtapp"
 echo "[Info] $CONFIG_srtapp 파일을 초기화했습니다."
 
-for i in $(echo $CONFIG | jq -r 'keys_unsorted | .[]')
-do
-  if [ $i == "Advanced" ]
-  then 
-    echo "[Info] Advanced 섹션에 도달하여 처리를 중단합니다."
-    break
-  fi 
-  echo "[$i]" >> $CONFIG_srtapp
-  echo "[Info] [$i] 섹션을 $CONFIG_srtapp에 추가했습니다."
-  
-  echo $CONFIG | jq --arg id "$i" -r '.[$id]|to_entries|map("\(.key)=\(.value|tostring)")|.[]' | sed -e "s/false/False/g" -e "s/true/True/g" >> $CONFIG_srtapp
-  echo "[Info] $i 섹션의 설정값들을 $CONFIG_srtapp에 추가했습니다."
-done
+echo "[DEFAULT]" >> "$CONFIG_srtapp"
+
+jq -r 'to_entries | .[] | select(.key != "Advanced") | "\(.key) = \(.value)"' <<< "$CONFIG" | sed -e 's/false/False/g' -e 's/true/True/g' >> "$CONFIG_srtapp"
 
 echo "[Info] 설정 파일 변환이 완료되었습니다: $CONFIG_srtapp"
