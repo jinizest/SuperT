@@ -25,6 +25,7 @@ options:
   telegram_bot_token: ""
   telegram_chat_id: ""
   phone_number: ""
+  log_level: "INFO"
 schema:
   share/srt/app.py 실행파일: bool
   share/srt/templates/index.html 템플릿 파일: bool
@@ -34,5 +35,6 @@ schema:
   telegram_bot_token: str?
   telegram_chat_id: str?
   phone_number: str?
+  log_level: list(DEBUG|INFO|WARNING|ERROR|CRITICAL)
 ports:
   5000/tcp: 5000

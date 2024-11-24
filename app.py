@@ -189,7 +189,9 @@ def stream():
     return Response(generate(), mimetype='text/event-stream')
 
 if __name__ == '__main__':
-    logging.basicConfig(format='%(levelname)s[%(asctime)s]:%(message)s ', level=logging.DEBUG)
+    log_level = get_config('LOG_LEVEL', 'INFO').upper()
+    logging.basicConfig(format='%(levelname)s[%(asctime)s]:%(message)s ', 
+                        level=getattr(logging, log_level))
     logger = logging.getLogger(__name__)
     
     try:
