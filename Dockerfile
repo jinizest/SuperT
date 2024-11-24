@@ -10,7 +10,7 @@ COPY templates /templates
 RUN apt-get update && apt-get install -y --no-install-recommends jq \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
-    && pip install --no-cache-dir Flask==2.0.1 requests SRTrain urllib3==1.26.15
+    && pip install --no-cache-dir Flask==2.0.1 Werkzeug==2.0.1 requests SRTrain urllib3==1.26.15
 
 # 작업 디렉토리 설정
 WORKDIR /share
