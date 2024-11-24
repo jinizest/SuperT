@@ -31,14 +31,24 @@
         input, select, button {
             box-sizing: border-box;
         }
-        input, select {
-            height: 30px !important;
+        input {
+            height: 20px !important;
             padding: 0.25px;
             border: 1px solid #ccc;
             border-radius: 4px;
             width: 200px;
             font-size: 15px !important;
             margin: 0px !important;
+        }
+        select {
+                height: 30px !important;
+                padding: 0.25px;
+                border: 1px solid #ccc;
+                border-radius: 4px;
+                width: 200px;
+                font-size: 15px !important;
+                margin: 0px !important;
+    
         }
         button {
             width: 120px;
@@ -64,7 +74,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin: 10px;
+            padding: 10px;
             width: 100%;
             box-sizing: border-box;
         }
@@ -90,7 +100,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin: 10px;
+            padding: 10px;
             width: 100%;
             box-sizing: border-box;
         }
@@ -109,7 +119,7 @@
             margin: 5px;
         }
         .swap-button {
-            background-color: #f0f0f0;
+            background-color: #bbbbbb;
             border: 1px solid #ccc;
             border-radius: 50%;
             width: 30px;
@@ -121,16 +131,16 @@
             align-items: center;
             padding: 0;
             flex-shrink: 0;
-            margin: 0 10px;
+            margin: 0 5px;
         }
         .swap-button:hover {
-            background-color: #e0e0e0;
+            background-color: #646464;
         }
         .login-container {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin: 10px;
+            padding: 10px;
             width: 100%;
             box-sizing: border-box;
         }
@@ -311,17 +321,17 @@
             <div class="login-container">
                 <div class="input-group">
                     <label for="sid">SRT ID:</label>
-                    <input type="text" id="sid" name="sid" value="{{ srt_id }}" required>
+                    <input type="text" style="width: 200px" id="sid" name="sid" value="{{ srt_id }}" required>
                 </div>
                 <div class="input-group">
                     <label for="spw">비밀번호:</label>
-                    <input type="password" id="spw" name="spw" value="{{ srt_password }}" required>
+                    <input type="password" style="width: 200px" id="spw" name="spw" value="{{ srt_password }}" required>
                 </div>
             </div>
             <div class="station-container">
                 <div class="station-select">
                     <label for="dep_station">출발역:</label>
-                    <select id="dep_station" name="dep_station" onchange="toggleInputField('dep_station', 'customDepStation')">
+                    <select id="dep_station" style="width: 200px" name="dep_station" onchange="toggleInputField('dep_station', 'customDepStation')">
                         <option value="동탄">동탄</option>
                         <option value="동대구">동대구</option>
                         <option value="수서">수서</option>
@@ -334,7 +344,7 @@
                     </select>
                     <input type="text" id="customDepStation" name="customDepStation" style="display:none;" placeholder="출발역 입력">
                 </div>
-                <button type="button" onclick="swapStations()" class="swap-button">⇄</button>
+                <button type="button" style="margin-top: 20px" onclick="swapStations()" class="swap-button">⇄</button>
                 <div class="station-select">
                     <label for="arr_station">도착역:</label>
                     <select id="arr_station" name="arr_station" onchange="toggleInputField('arr_station', 'customArrStation')">

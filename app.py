@@ -81,7 +81,7 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
                             break
                         try:
                             # 대기 예약 시도
-                            message = '조회' + ' @' + datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                            # message = '조회' + ' @' + datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                             logging.info(message)
                             output_queue.put(message)
                             srt.reserve_standby(train)
