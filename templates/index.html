@@ -261,6 +261,7 @@
         }
         
         function stopReservation() {
+            console.log("중단 버튼 클릭됨");
             fetch('/stop', {method: 'POST'})
             .then(response => response.json())
             .then(data => {
@@ -269,7 +270,15 @@
                 document.getElementById('stopButton').disabled = true;
                 document.getElementById('status').innerHTML = "예약 프로세스가 중단되었습니다.";
             })
-            .catch(error => console.error('Error:', error));
+            .catch(error => {
+                console.error('Error:', error);
+                alert("중단 요청 처리 중 오류가 발생했습니다.");
+            });
+        }
+        // 예약 시작 시 중단 버튼 활성화
+        function startReservation() {
+            isReservationRunning = true;
+            document.getElementById('stopButton').disabled = false;
         }
 
         window.onload = function() {
