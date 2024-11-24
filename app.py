@@ -195,7 +195,8 @@ def stream():
 
                 if new_logs:
                     new_logs.reverse()
-                    yield f"data: {'\n'.join(new_logs)}\n\n"
+                    newline = '\n'
+                    yield f"data: {newline.join(new_logs)}\n\n"
             else:
                 time.sleep(0.1)  # 0.1초마다 확인
 
