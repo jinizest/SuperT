@@ -16,7 +16,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends jq \
 WORKDIR /share
 
 # 실행 권한 부여
-RUN chmod a+x run.sh makeconf.sh
+RUN chmod a+x /makeconf.sh
+RUN chmod a+x /run.sh
 
 # 실행 명령 설정
 CMD [ "/run.sh" ]
