@@ -207,6 +207,7 @@ def stream():
     
     return Response(generate(), mimetype='text/event-stream')
 
+
 if __name__ == '__main__':
     log_level = get_config('LOG_LEVEL', 'INFO').upper()
     logging.basicConfig(

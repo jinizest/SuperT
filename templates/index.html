@@ -315,14 +315,16 @@
         var outputSource = new EventSource("/stream");
         outputSource.onmessage = function(event) {
             var outputDiv = document.getElementById("output");
-            var logElement = document.createElement('pre');
-            logElement.textContent = event.data;
-            outputDiv.insertBefore(logElement, outputDiv.firstChild);
-            
+            var newLogs = event.data.split('\n').filter(Boolean);
+            newLogs.forEach(function(log) {
+                var logElement = document.createElement('div');
+                logElement.textContent = log;
+                outputDiv.insertBefore(logElement, outputDiv.firstChild);
+            });
             while (outputDiv.childElementCount > 1000) {
                 outputDiv.removeChild(outputDiv.lastChild);
             }
-        };      
+        };        
 
         function toggleInputVisibility() {
             var botTokenInput = document.getElementById('bot_token');
