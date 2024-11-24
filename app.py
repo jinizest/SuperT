@@ -172,18 +172,33 @@ def stream():
         formatter = logging.Formatter('%(asctime)s.%(msecs)03d - %(levelname)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
         handler.setFormatter(formatter)
         logging.getLogger().addHandler(handler)
-        last_position = 0
+        last_timestamp = datetime.now()
+
         while True:
-            log_stream.seek(last_position)
+            log_stream.seek(0)
             log_content = log_stream.read()
+            log_stream.truncate(0)
+            log_stream.seek(0)
+
             if log_content:
                 log_lines = log_content.strip().split('\n')
-                log_lines.reverse()
-                newline = '\n'
-                yield f"data: {newline.join(log_lines)}\n\n"
-                last_position = log_stream.tell()
+                new_logs = []
+                for line in log_lines:
+                    try:
+                        timestamp_str = line.split(' - ')[0]
+                        timestamp = datetime.strptime(timestamp_str, '%Y-%m-%d %H:%M:%S.%f')
+                        if timestamp > last_timestamp:
+                            new_logs.append(line)
+                            last_timestamp = timestamp
+                    except (ValueError, IndexError):
+                        continue  # 잘못된 형식의 로그 라인은 무시
+
+                if new_logs:
+                    new_logs.reverse()
+                    yield f"data: {'\n'.join(new_logs)}\n\n"
             else:
                 time.sleep(0.1)  # 0.1초마다 확인
+
     return Response(generate(), mimetype='text/event-stream')
 
 if __name__ == '__main__':

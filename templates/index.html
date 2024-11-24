@@ -193,6 +193,7 @@
             padding: 10px;
             margin-top: 20px;
             box-sizing: border-box;
+            font-size: 12px; /* 원하는 크기로 조정 */
         }
         #start_hour, #start_minute, #end_hour, #end_minute {
             width: 50px !important;
@@ -309,8 +310,24 @@
         var outputSource = new EventSource("/stream");
         outputSource.onmessage = function(event) {
             var outputDiv = document.getElementById("output");
-            outputDiv.innerHTML = event.data + "<br>" + outputDiv.innerHTML;
-            outputDiv.scrollTop = 0;
+            var currentTime = new Date();
+            var newLogs = event.data.split('\n').filter(Boolean);
+            
+            newLogs.forEach(function(log) {
+                var logElement = document.createElement('div');
+                logElement.textContent = log;
+                logElement.dataset.timestamp = currentTime.getTime();
+                outputDiv.insertBefore(logElement, outputDiv.firstChild);
+            });
+            
+            // 1시간 이전의 로그 삭제
+            var oneHourAgo = currentTime.getTime() - (60 * 60 * 1000);
+            var logEntries = outputDiv.getElementsByTagName('div');
+            for (var i = logEntries.length - 1; i >= 0; i--) {
+                if (parseInt(logEntries[i].dataset.timestamp) < oneHourAgo) {
+                    logEntries[i].remove();
+                }
+            }
         };
 
         function toggleInputVisibility() {
@@ -448,7 +465,7 @@
                 <button type='button' id='stopButton' class='stop-button' onclick='stopReservation()' disabled>중단</button>
             </div>
         </form>
-        <div id='results'></div>
+        <div id='results' style="padding-top: 10px"></div>
         <div id="output" style="height: 300px; overflow-y: scroll; border: 1px solid #ccc; padding: 10px; margin-top: 20px;"></div>
     </main>
 </body>
