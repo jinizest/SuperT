@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 CONFIG_FILE=/data/options.json
 CONFIG_srtapp=/share/srt/app.conf
@@ -16,6 +16,6 @@ echo "[Info] $CONFIG_srtapp 파일을 초기화했습니다."
 
 echo "[DEFAULT]" >> "$CONFIG_srtapp"
 
-jq -r 'to_entries | .[] | select(.key != "Advanced") | "\(.key) = \(.value)"' <<< "$CONFIG" | sed -e 's/false/False/g' -e 's/true/True/g' > "$CONFIG_srtapp"
+jq -r 'to_entries | .[] | select(.key != "Advanced") | "\(.key) = \(.value)"' "$CONFIG" | sed -e 's/false/False/g' -e 's/true/True/g' > "$CONFIG_srtapp"
 
 echo "[Info] 설정 파일 변환이 완료되었습니다: $CONFIG_srtapp"
