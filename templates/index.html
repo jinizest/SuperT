@@ -18,8 +18,15 @@
         }
         h1 {
             color: #333;
-            font-size: 15px;
+            font-size: 30px;
             text-align: center;
+        }
+        .creator {
+            font-size: 13px;
+            position: absolute;
+            right: 0;
+            bottom: -5px;
+            color: #c3c3c3;
         }
         label {
             width: 80px;
@@ -27,6 +34,7 @@
             white-space: nowrap;
             color: #333333;
             margin: 0px !important;
+            font-weight: bold;
         }
         input, select, button {
             box-sizing: border-box;
@@ -59,8 +67,17 @@
             margin-right: 10px;
             font-size: 15px;
         }
+        .search-button {
+            background-color: #000000;
+            border-color: #bdbdbd;
+            color: white;
+            width: 370px !important;
+            height: 45px !important;
+            font-size: 17px !important;
+        }
         .stop-button {
             background-color: #808080;
+            border-color: #bdbdbd;
             color: white;
             width: 80px !important;
             height: 45px !important;
@@ -74,7 +91,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 10px;
+            padding: 5px;
             width: 100%;
             box-sizing: border-box;
         }
@@ -100,7 +117,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 10px;
+            padding: 5px;
             width: 100%;
             box-sizing: border-box;
         }
@@ -140,14 +157,14 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 10px;
+            padding: 5px;
             width: 100%;
             box-sizing: border-box;
         }
         .input-group {
             display: flex;
             flex-direction: column;
-            width: 48%;
+            width: 200px;
         }
         .input-group label {
             margin: 5px;
@@ -175,10 +192,9 @@
             justify-content: space-between;
             align-items: center;
             width: 100%;
+            height: 45px;
+            padding-top: 15px;
             box-sizing: border-box;
-        }
-        .search-button {
-            width: 350px !important;
         }
         @media (min-width: 501px) {
             body {
@@ -316,7 +332,7 @@
 </head>
 <body>
     <main class="container">
-        <h1>SRT 기차 예약</h1>
+        <h1>SRT 기차 예약 <span class="creator">created by Simon</span></h1>
         <form method="post" onsubmit="submitForm(event)">
             <div class="login-container">
                 <div class="input-group">
@@ -367,23 +383,23 @@
             </div>
             <div class='input-container'>
                 <label for='start_hour'>시작 시간:</label>
-                <select id='start_hour' name='start_hour' class='small-select'>
+                <select id='start_hour' name='start_hour' style="width: 60px !important" class='small-select'>
                     {% for hour in range(24) %}
                     <option value="{{ '%02d' % hour }}">{{ '%02d' % hour }}</option>
                     {% endfor %}
                 </select>
-                <select id='start_minute' name='start_minute' class='small-select'>
+                <select id='start_minute' name='start_minute' style="width: 60px !important" class='small-select'>
                     {% for minute in range(0, 60, 10) %}
                     <option value="{{ '%02d' % minute }}">{{ '%02d' % minute }}</option>
                     {% endfor %}
                 </select>
                 <label for='end_hour'>종료 시간:</label>
-                <select id='end_hour' name='end_hour' class='small-select'>
+                <select id='end_hour' name='end_hour' style="width: 60px !important" class='small-select'>
                     {% for hour in range(24) %}
                     <option value="{{ '%02d' % hour }}">{{ '%02d' % hour }}</option>
                     {% endfor %}
                 </select>
-                <select id='end_minute' name='end_minute' class='small-select'>
+                <select id='end_minute' name='end_minute' style="width: 60px !important" class='small-select'>
                     {% for minute in range(0, 60, 10) %}
                     <option value="{{ '%02d' % minute }}">{{ '%02d' % minute }}</option>
                     {% endfor %}
