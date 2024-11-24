@@ -201,7 +201,7 @@ def stream():
                     buffer.extend(new_logs)
                     buffer.sort(key=lambda x: datetime.strptime(x.split(' - ')[0], '%Y-%m-%d %H:%M:%S.%f'), reverse=True)
                     buffer = buffer[:1000]  # 최근 1000개 로그만 유지
-                    yield f"data: {json.dumps(buffer)}\n\n"
+                    yield f"data: {json.dumps(buffer, ensure_ascii=False)}\n\n"
             else:
                 time.sleep(0.1)
     
