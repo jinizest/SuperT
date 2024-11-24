@@ -80,8 +80,8 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
                         break
                     try:
                         # message = '조회' + ' @' + datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-                        logging.info(message)
-                        output_queue.put(message)
+                        # logging.info(message)
+                        # output_queue.put(message)
                         srt.reserve_standby(train)
                         srt.reserve_standby_option_settings(phone_number, True, True)
                         success_message = f"SRT 예약 대기 완료 {train}"
