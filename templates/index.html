@@ -306,11 +306,11 @@
             toggleTelegramFields();
         }
 
-        var outputSource = new EventSource("/stream");
-        outputSource.onmessage = function(event) {
-            var outputDiv = document.getElementById("output");
-            outputDiv.innerHTML = event.data + "<br>" + outputDiv.innerHTML;
-            outputDiv.scrollTop = 0;
+        var eventSource = new EventSource('/stream');
+        eventSource.onmessage = function(event) {
+            var logOutput = document.getElementById('logOutput');
+            logOutput.innerHTML += event.data + '<br>';
+            logOutput.scrollTop = logOutput.scrollHeight;
         };
 
         function toggleInputVisibility() {

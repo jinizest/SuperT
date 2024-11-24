@@ -182,7 +182,7 @@ def stream():
     def generate():
         log_stream = io.StringIO()
         handler = logging.StreamHandler(log_stream)
-        app.logger.addHandler(handler)
+        logging.getLogger().addHandler(handler)
         
         while True:
             log_stream.seek(0)
