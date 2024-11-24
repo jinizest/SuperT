@@ -310,15 +310,13 @@
         var outputSource = new EventSource("/stream");
         outputSource.onmessage = function(event) {
             var outputDiv = document.getElementById("output");
-            var newLogs = event.data.split('\n').filter(Boolean);
+            var newLogs = JSON.parse(event.data);
+            outputDiv.innerHTML = ''; // 기존 로그 삭제
             newLogs.forEach(function(log) {
                 var logElement = document.createElement('div');
                 logElement.textContent = log;
-                outputDiv.insertBefore(logElement, outputDiv.firstChild);
+                outputDiv.appendChild(logElement);
             });
-            while (outputDiv.childElementCount > 1000) {
-                outputDiv.removeChild(outputDiv.lastChild);
-            }
         };
 
         function toggleInputVisibility() {
