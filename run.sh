@@ -13,19 +13,12 @@ mkdir -p $SHARE_DIR
 mkdir -p $SHARE_DIR/templates
 echo "[Info] 새로운 디렉토리 생성됨: $SHARE_DIR"
 
-# makeconf.sh 파일을 이동하고 실행 권한을 부여합니다.
-if [ -f /makeconf.sh ]; then
-    mv /makeconf.sh $SHARE_DIR/
-    chmod +x $SHARE_DIR/makeconf.sh
-    echo "[Info] makeconf.sh를 $SHARE_DIR로 이동했습니다."
-    
-    if $SHARE_DIR/makeconf.sh; then
-        echo "[Info] makeconf.sh 실행 성공"
-    else
-        echo "[Error] makeconf.sh 실행 실패"
-    fi
+# 설정파일 생성 및 복사이동
+/makeconf.sh
+if /makeconf.sh; then
+echo "[Info] makeconf.sh 실행 성공"
 else
-    echo "[Error] makeconf.sh가 존재하지 않습니다."
+echo "[Error] makeconf.sh 실행 실패"
 fi
 
 # app.py와 index.html이 존재하는지 체크 후 이동
