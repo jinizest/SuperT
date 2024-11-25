@@ -207,13 +207,19 @@
         @media (max-width: 500px) {
             h1 {
               font-size: 24px;
-              padding-right: 100px;
             }
             
             .creator {
               font-size: 10px;
             }
-          }
+            
+            /* input과 select 요소의 너비 조정 */
+            input, select {
+                width: 100%; /* 부모 요소의 너비에 맞춰 조정 */
+                box-sizing: border-box; /* 패딩과 보더를 포함한 너비 계산 */
+                margin-bottom: 5px; /* 요소 간의 여백 추가 */
+            }
+        }
     </style>
     <script>
         let isReservationRunning = false;
