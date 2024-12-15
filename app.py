@@ -54,14 +54,15 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
     global messages, stop_reservation
     try:
         srt = SRT(sid, spw, verbose=False)
+        trains = srt.search_train(dep_station, arr_station, date, time_start, time_end, available_only=False)
+        
         while not stop_reservation:
             try:
                 message = '예약시도.....' + ' @' + datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                 logging.info(message)
                 output_queue.put(message)
-                time.sleep(1)
+                time.sleep(1)                
                 
-                trains = srt.search_train(dep_station, arr_station, date, time_start, time_end, available_only=False)
                 if 'Expecting value' in str(trains):
                     message = 'Expecting value 오류'
                     logging.error(message)
