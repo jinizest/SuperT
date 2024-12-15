@@ -36,7 +36,7 @@ SRT_PASSWORD = get_config('srt_password', '')
 TELEGRAM_BOT_TOKEN = get_config('telegram_bot_token', '')
 TELEGRAM_CHAT_ID = get_config('telegram_chat_id', '')
 PHONE_NUMBER = get_config('phone_number', '')
-DELAY = get_config('time_delay', 1)
+DELAY = int(get_config('time_delay', '1'))
 
 def send_telegram_message(bot_token, chat_id, message):
     if bot_token and chat_id:
