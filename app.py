@@ -36,6 +36,7 @@ SRT_PASSWORD = get_config('srt_password', '')
 TELEGRAM_BOT_TOKEN = get_config('telegram_bot_token', '')
 TELEGRAM_CHAT_ID = get_config('telegram_chat_id', '')
 PHONE_NUMBER = get_config('phone_number', '')
+DELAY = get_config('time_delay', 1)
 
 def send_telegram_message(bot_token, chat_id, message):
     if bot_token and chat_id:
@@ -61,7 +62,7 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
                 message = '예약시도.....' + ' @' + datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                 logging.info(message)
                 output_queue.put(message)
-                time.sleep(1)                
+                time.sleep(DELAY)                
                 
                 if 'Expecting value' in str(trains):
                     message = 'Expecting value 오류'
