@@ -157,8 +157,7 @@ def index():
         
         # 새로운 입력 필드 추가
         num_adults = int(request.form.get('num_adults', 1))
-        num_children = int(request.form.get('num_children', 0))
-        seat_type = getattr(SeatType, request.form.get('seat_type', 'GENERAL_FIRST'))
+        seat_type = 'GENERAL_FIRST'
 
         reservation_thread = threading.Thread(target=attempt_reservation, args=(sid, spw, dep_station, arr_station, date, start_time, end_time, phone_number, enable_telegram, bot_token, chat_id, num_adults, num_children, seat_type))
         reservation_thread.start()
