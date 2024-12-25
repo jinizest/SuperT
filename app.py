@@ -51,37 +51,43 @@ def send_telegram_message(bot_token, chat_id, message):
         else:
             logging.error(f"메시지 전송에 실패했습니다. 상태 코드: {response.status_code}")
 
-def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, time_end, phone_number, enable_telegram, bot_token, chat_id):
+def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, time_end, phone_number, enable_telegram, bot_token, chat_id, num_adults, num_children, seat_type):
     global messages, stop_reservation
     try:
         srt = SRT(sid, spw, verbose=False)
         trains = srt.search_train(dep_station, arr_station, date, time_start, time_end, available_only=False)
-        
+
         while not stop_reservation:
             try:
                 message = '예약시도.....' + ' @' + datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                 logging.info(message)
                 output_queue.put(message)
-                time.sleep(DELAY)                
-                
+                time.sleep(DELAY)
+
                 if 'Expecting value' in str(trains):
                     message = 'Expecting value 오류'
                     logging.error(message)
                     output_queue.put(message)
                     messages.append(message)
                     continue
-                
+
                 for train in trains:
                     logging.info(str(train))
                     output_queue.put(str(train))
-                
+
                 for train in trains:
                     if stop_reservation:
                         break
                     try:
-                        srt.reserve_standby(train)
-                        srt.reserve_standby_option_settings(phone_number, True, True)
-                        success_message = f"SRT 예약 대기 완료 {train}"
+                        passengers = [Adult() for _ in range(num_adults)] + [Child() for _ in range(num_children)]
+                        if "예약대기 가능" in str(train):
+                            srt.reserve_standby(train, passengers=passengers, special_seat=seat_type)
+                            srt.reserve_standby_option_settings(phone_number, True, True)
+                            success_message = f"SRT 예약 대기 완료 {train}"
+                        else:
+                            srt.reserve(train, passengers=passengers, special_seat=seat_type)
+                            success_message = f"SRT 예약 완료 {train}"
+                        
                         messages.append(success_message)
                         output_queue.put(success_message)
                         if enable_telegram:
@@ -93,6 +99,7 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
                         logging.error(error_message)
                         output_queue.put(error_message)
                         messages.append(error_message)
+
             except Exception as e:
                 error_message = f"메인 루프에서 오류 발생: {e}"
                 logging.error(error_message)
@@ -106,6 +113,7 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
                     send_telegram_message(bot_token, chat_id, error_message)
                 time.sleep(5)
                 srt = SRT(sid, spw, verbose=False)
+
     except Exception as main_e:
         critical_error = f"심각한 오류 발생: {main_e}"
         logging.critical(critical_error)
@@ -121,14 +129,13 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
             srt.logout()
     return messages
 
-reservation_thread = None
-
 @app.route('/', methods=['GET', 'POST'])
 def index():
     global reservation_thread, stop_reservation
     if request.method == 'POST':
         if reservation_thread and reservation_thread.is_alive():
             return jsonify({'message': '이미 예약 프로세스가 실행 중입니다.'})
+        
         stop_reservation = False
         sid = request.form.get('sid', SRT_ID)
         spw = request.form.get('spw', SRT_PASSWORD)
@@ -145,10 +152,16 @@ def index():
         enable_telegram = 'enable_telegram' in request.form
         bot_token = request.form.get('bot_token', TELEGRAM_BOT_TOKEN)
         chat_id = request.form.get('chat_id', TELEGRAM_CHAT_ID)
-        reservation_thread = threading.Thread(target=attempt_reservation, args=(sid, spw, dep_station, arr_station, date, start_time, end_time, phone_number, enable_telegram, bot_token, chat_id))
+        
+        # 새로운 입력 필드 추가
+        num_adults = int(request.form.get('num_adults', 1))
+        num_children = int(request.form.get('num_children', 0))
+        seat_type = getattr(SeatType, request.form.get('seat_type', 'GENERAL_FIRST'))
+
+        reservation_thread = threading.Thread(target=attempt_reservation, args=(sid, spw, dep_station, arr_station, date, start_time, end_time, phone_number, enable_telegram, bot_token, chat_id, num_adults, num_children, seat_type))
         reservation_thread.start()
         return jsonify({'message': '예약 프로세스가 시작되었습니다.'})
-    
+
     default_values = {
         'srt_id': SRT_ID,
         'srt_password': SRT_PASSWORD,

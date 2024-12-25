@@ -447,6 +447,33 @@
                 ━
                 <input type='text' name='phone_part3' size='4' maxlength='4' class='small-input' value='{{ phone_number.split("-")[2] }}'>
             </div>
+
+            <div class='input-container' style="display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; align-items: center; width: 30%;">
+                    <label for="num_adults" style="margin-right: 5px;">승객 수:</label>
+                    <select id="num_adults" name="num_adults" required style="width: 70px;">
+                        <option value="1">1명</option>
+                        <option value="2">2명</option>
+                        <option value="3">3명</option>
+                        <option value="4">4명</option>
+                        <option value="5">5명</option>
+                        <option value="6">6명</option>
+                        <option value="7">7명</option>
+                        <option value="8">8명</option>
+                    </select>
+                </div>
+                <div style="display: flex; align-items: center; width: 50%;">
+                    <label for="seat_type" style="margin-right: 5px;">좌석:</label>
+                    <select id="seat_type" name="seat_type" style="width: calc(100% - 50px);">
+                        <option value="GENERAL_FIRST">일반실 우선</option>
+                        <option value="GENERAL_ONLY">일반실만</option>
+                        <option value="SPECIAL_FIRST">특실 우선</option>
+                        <option value="SPECIAL_ONLY">특실만</option>
+                    </select>
+                </div>
+            </div>
+                       
+            
             <div class='input-container'>
                 <label>텔레그램 알림 봇 사용:</label>
                 <input type='checkbox' id='enable_telegram' name='enable_telegram' onclick='toggleTelegramFields()'>
