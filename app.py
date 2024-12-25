@@ -129,6 +129,8 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
             srt.logout()
     return messages
 
+reservation_thread = None
+
 @app.route('/', methods=['GET', 'POST'])
 def index():
     global reservation_thread, stop_reservation
