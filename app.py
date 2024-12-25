@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, jsonify, Response
-from SRT import SRT
+from SRT.passenger import Adult
+from SRT import SRT, SeatType
 import requests
 from datetime import datetime
 import time
@@ -51,7 +52,7 @@ def send_telegram_message(bot_token, chat_id, message):
         else:
             logging.error(f"메시지 전송에 실패했습니다. 상태 코드: {response.status_code}")
 
-def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, time_end, phone_number, enable_telegram, bot_token, chat_id, num_adults, num_children, seat_type):
+def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, time_end, phone_number, enable_telegram, bot_token, chat_id, num_adults, seat_type):
     global messages, stop_reservation
     try:
         srt = SRT(sid, spw, verbose=False)
@@ -79,14 +80,14 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
                     if stop_reservation:
                         break
                     try:
-                        passengers = [Adult() for _ in range(num_adults)] + [Child() for _ in range(num_children)]
+                        passengers = [Adult() for _ in range(num_adults)] 
                         if "예약대기 가능" in str(train):
-                            srt.reserve_standby(train, passengers=passengers, special_seat=seat_type)
+                            srt.reserve_standby(train)
                             srt.reserve_standby_option_settings(phone_number, True, True)
                             success_message = f"SRT 예약 대기 완료 {train}"
                         else:
                             srt.reserve(train, passengers=passengers, special_seat=seat_type)
-                            success_message = f"SRT 예약 완료 {train}"
+                            success_message = f"SRT 예약 완료, !!결재 필요!! {train}"
                         
                         messages.append(success_message)
                         output_queue.put(success_message)
@@ -159,7 +160,7 @@ def index():
         num_adults = int(request.form.get('num_adults', 1))
         seat_type = 'GENERAL_FIRST'
 
-        reservation_thread = threading.Thread(target=attempt_reservation, args=(sid, spw, dep_station, arr_station, date, start_time, end_time, phone_number, enable_telegram, bot_token, chat_id, num_adults, num_children, seat_type))
+        reservation_thread = threading.Thread(target=attempt_reservation, args=(sid, spw, dep_station, arr_station, date, start_time, end_time, phone_number, enable_telegram, bot_token, chat_id, num_adults, seat_type))
         reservation_thread.start()
         return jsonify({'message': '예약 프로세스가 시작되었습니다.'})
 
