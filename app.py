@@ -70,6 +70,8 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
                     logging.error(message)
                     output_queue.put(message)
                     messages.append(message)
+                    srt = SRT(sid, spw, verbose=False)
+                    trains = srt.search_train(dep_station, arr_station, date, time_start, time_end, available_only=False)
                     continue
 
                 for train in trains:
