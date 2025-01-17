@@ -102,6 +102,14 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
                         logging.error(error_message)
                         output_queue.put(error_message)
                         messages.append(error_message)
+                        if 'Expecting value' in e:
+                            message = 'Expecting value 오류'
+                            logging.error(message)
+                            output_queue.put(message)
+                            messages.append(message)
+                            srt = SRT(sid, spw, verbose=False)
+                            trains = srt.search_train(dep_station, arr_station, date, time_start, time_end, available_only=False)
+                            continue
 
             except Exception as e:
                 error_message = f"메인 루프에서 오류 발생: {e}"
