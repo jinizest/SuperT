@@ -134,7 +134,7 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
                     
     
         except Exception as main_e:
-            critical_error = f"심각한 오류 발생: {main_e}"
+            critical_error = f"{error_cnt}심각한 오류 발생: {main_e}"
             logging.critical(critical_error)
             output_queue.put(critical_error)
             messages.append(critical_error)
@@ -144,7 +144,8 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
             srt = SRT(sid, spw, verbose=True)
             error_cnt += 1
             if error_cnt > 200:
-                send_telegram_message(bot_token, chat_id, "!!!심각한 오류 반복으로 MACRO 정지!!!")
+                 if enable_telegram:
+                    send_telegram_message(bot_token, chat_id, "!!!심각한 오류 반복으로 MACRO 정지!!!")
                 stop_reservation = True
         finally:            
             if 'srt' in locals():
