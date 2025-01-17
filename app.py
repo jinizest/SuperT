@@ -144,7 +144,7 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
             srt = SRT(sid, spw, verbose=True)
             error_cnt += 1
             if error_cnt > 200:
-                 if enable_telegram:
+                if enable_telegram:
                     send_telegram_message(bot_token, chat_id, "!!!심각한 오류 반복으로 MACRO 정지!!!")
                 stop_reservation = True
         finally:            
