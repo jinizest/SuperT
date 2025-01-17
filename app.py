@@ -102,6 +102,10 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
                         logging.error(error_message)
                         output_queue.put(error_message)
                         messages.append(error_message)
+                        if '원활하지 않습니다' in str(e):
+                            time.sleep(3)
+                            srt = SRT(sid, spw, verbose=False)
+                            continue                        
                         if 'Expecting value' in str(e):
                             message = 'Expecting value 오류'
                             logging.error(message)
@@ -116,7 +120,7 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
                 logging.error(error_message)
                 output_queue.put(error_message)
                 messages.append(error_message)
-                if '사용자가 많아 접속이 원활하지 않습니다.' in str(e):
+                if '원활하지 않습니다' in str(e):
                     time.sleep(5)
                     srt = SRT(sid, spw, verbose=False)
                     continue
