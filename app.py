@@ -102,7 +102,7 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
                         logging.error(error_message)
                         output_queue.put(error_message)
                         messages.append(error_message)
-                        if 'Expecting value' in e:
+                        if 'Expecting value' in str(e):
                             message = 'Expecting value 오류'
                             logging.error(message)
                             output_queue.put(message)
