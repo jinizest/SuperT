@@ -97,6 +97,15 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
                         break
                     except Exception as e:
                         error_message = f"열차 {train}에 대한 오류 발생: {e}"
+                                
+                        if 'Expecting value' in str(e):
+                            message = 'Expecting value 오류'
+                            logging.error(message)
+                            output_queue.put(message)
+                            messages.append(message)
+                            trains = srt.search_train(dep_station, arr_station, date, time_start, time_end, available_only=False)#train정보 다시 가져오기
+                            
+                        
                         logging.error(error_message)
                         output_queue.put(error_message)
                         messages.append(error_message)
