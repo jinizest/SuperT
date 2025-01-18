@@ -106,7 +106,7 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
                             output_queue.put(error_message)
                             messages.append(error_message)
                             if '원활하지 않습니다' in str(e):
-                                time.sleep(1) #원활하지 않다는 에러 이후, 5초내로 srt = SRT 하면 바로 IP 밴 error 발생
+                                time.sleep(10) #원활하지 않다는 에러 이후, 5초내로 srt = SRT 하면 바로 IP 밴 error 발생
                                 if 'srt' in locals(): #그래서 로그아웃 시도
                                     srt.logout()
                                 srt = SRT(sid, spw, verbose=False)
@@ -126,7 +126,7 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
                     output_queue.put(error_message)
                     messages.append(error_message)
                     if '원활하지 않습니다' in str(e):
-                        time.sleep(1) #원활하지 않다는 에러 이후, 5초내로 srt = SRT 하면 바로 IP 밴 error 발생
+                        time.sleep(10) #원활하지 않다는 에러 이후, 5초내로 srt = SRT 하면 바로 IP 밴 error 발생
                         if 'srt' in locals():#그래서 로그아웃 시도
                             srt.logout()
                         srt = SRT(sid, spw, verbose=False)
