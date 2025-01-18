@@ -72,6 +72,9 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
                         logging.error(message)
                         output_queue.put(message)
                         messages.append(message)
+                        if 'srt' in locals():#그래서 로그아웃 시도
+                            srt.logout()
+                        time.sleep(10)
                         srt = SRT(sid, spw, verbose=False)
                         trains = srt.search_train(dep_station, arr_station, date, time_start, time_end, available_only=False)
                         continue
@@ -116,6 +119,9 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
                                 logging.error(message)
                                 output_queue.put(message)
                                 messages.append(message)
+                                if 'srt' in locals():#그래서 로그아웃 시도
+                                    srt.logout()
+                                time.sleep(10)
                                 srt = SRT(sid, spw, verbose=False)
                                 trains = srt.search_train(dep_station, arr_station, date, time_start, time_end, available_only=False)
                                 continue
@@ -129,11 +135,10 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
                         time.sleep(10) #원활하지 않다는 에러 이후, 5초내로 srt = SRT 하면 바로 IP 밴 error 발생
                         if 'srt' in locals():#그래서 로그아웃 시도
                             srt.logout()
-                        srt = SRT(sid, spw, verbose=False)
                         continue
                     if enable_telegram:
                         send_telegram_message(bot_token, chat_id, error_message)
-                    time.sleep(5)
+                    time.sleep(10)
                     srt = SRT(sid, spw, verbose=False)
                     
     
