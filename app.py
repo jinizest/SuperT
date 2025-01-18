@@ -81,20 +81,22 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
                         break
                     try:
                         passengers = [Adult() for _ in range(num_adults)] 
-                        if "예약대기 가능" in str(train):
+                        if "예약대기 가능" in str(train): #동탄~수서(16:20~16:37) 특실 예약가능, 일반실 예약가능, 예약대기 불가능:
                             srt.reserve_standby(train)
                             srt.reserve_standby_option_settings(phone_number, True, True)
                             success_message = f"SRT 예약 대기 완료 {train}"
-                        else:
+                        elif "예약가능" in str(train):
                             srt.reserve(train, passengers=passengers, special_seat=seat_type)
                             success_message = f"SRT 예약 완료, !!결재 필요!! {train}"
-                        
+                        else:
+                            continue                      
                         messages.append(success_message)
                         output_queue.put(success_message)
+                        
                         if enable_telegram:
                             send_telegram_message(bot_token, chat_id, success_message)
                         logging.info("예약 성공했지만 계속 진행합니다.")
-                        break
+                        continue #열차 여러개인데 첫번쨰 열차가 성공해도 두번쨰 세번째도 진행하도록
                     except Exception as e:
                         error_message = f"열차 {train}에 대한 오류 발생: {e}"
                                 
@@ -104,7 +106,9 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
                             output_queue.put(message)
                             messages.append(message)
                             trains = srt.search_train(dep_station, arr_station, date, time_start, time_end, available_only=False)#train정보 다시 가져오기
-                            
+
+                        if "서비스가 접속이 원활하지 않습니다" in str(e):
+                            time.sleep(30) #잠시 대기
                         
                         logging.error(error_message)
                         output_queue.put(error_message)
