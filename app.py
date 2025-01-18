@@ -109,20 +109,26 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
                             output_queue.put(error_message)
                             messages.append(error_message)
                             if '원활하지 않습니다' in str(e):
-                                time.sleep(10) #원활하지 않다는 에러 이후, 5초내로 srt = SRT 하면 바로 IP 밴 error 발생
+                                time.sleep(60) #원활하지 않다는 에러 이후, 5초내로 srt = SRT 하면 바로 IP 밴 error 발생
                                 if 'srt' in locals(): #그래서 로그아웃 시도
                                     srt.logout()
+                                    logging.error("로그아웃")
                                 srt = SRT(sid, spw, verbose=False)
-                                continue                        
+                                logging.error("로그인")
+                                trains = srt.search_train(dep_station, arr_station, date, time_start, time_end, available_only=False)
+                                continue              
+                                
                             if 'Expecting value' in str(e):
                                 message = 'Expecting value 오류'
                                 logging.error(message)
                                 output_queue.put(message)
                                 messages.append(message)
+                                time.sleep(60)
                                 if 'srt' in locals():#그래서 로그아웃 시도
                                     srt.logout()
-                                time.sleep(10)
+                                    logging.error("로그아웃")
                                 srt = SRT(sid, spw, verbose=False)
+                                logging.error("로그인")
                                 trains = srt.search_train(dep_station, arr_station, date, time_start, time_end, available_only=False)
                                 continue
     
@@ -131,16 +137,30 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
                     logging.error(error_message)
                     output_queue.put(error_message)
                     messages.append(error_message)
-                    if '원활하지 않습니다' in str(e):
-                        time.sleep(10) #원활하지 않다는 에러 이후, 5초내로 srt = SRT 하면 바로 IP 밴 error 발생
-                        if 'srt' in locals():#그래서 로그아웃 시도
-                            srt.logout()
-                        continue
                     if enable_telegram:
                         send_telegram_message(bot_token, chat_id, error_message)
-                    time.sleep(10)
+                        
+                except SRTLoginError as login_error:
+                    logging.error(f"로그인 오류: {login_error}")
+                    # 로그인 오류에 대한 특정 처리
+                    if enable_telegram:
+                        send_telegram_message(bot_token, chat_id, str(login_error))
+
+            
+                except SRTResponseError as response_error:
+                    logging.error(f"SRT 응답 오류: {response_error}")
+                    # SRT 응답 오류에 대한 특정 처리
+                    if enable_telegram:
+                        send_telegram_message(bot_token, chat_id, str(response_error))
+
+                finally:            
+                    if 'srt' in locals():
+                        srt.logout()
+                        logging.error("메인에러 로그아웃")
+                    time.sleep(60)
                     srt = SRT(sid, spw, verbose=False)
-                    
+                    logging.error("메인에러러 로그인")
+
     
         except Exception as main_e:
             critical_error = f"{error_cnt}심각한 오류 발생: {main_e}"
@@ -149,8 +169,7 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
             messages.append(critical_error)
             if enable_telegram:
                 send_telegram_message(bot_token, chat_id, critical_error)
-            time.sleep(30)            
-            srt = SRT(sid, spw, verbose=True)
+            time.sleep(60)            
             error_cnt += 1
             if error_cnt > 200:
                 if enable_telegram:
@@ -158,8 +177,8 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
                 stop_reservation = True
         finally:            
             if 'srt' in locals():
-                srt.logout()
-                
+                srt.logout()       
+                logging.error("심각에러 로그아웃")
     return messages
 
 reservation_thread = None
