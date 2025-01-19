@@ -69,6 +69,7 @@ def send_telegram_message(bot_token, chat_id, message):
 
 def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, time_end, phone_number, enable_telegram, bot_token, chat_id, num_adults, seat_type):
     global messages, stop_reservation
+    
     while not stop_reservation:
         try:
             srt = SRT(sid, spw, verbose=False)
@@ -125,6 +126,7 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
                                 output_queue.put(message)
                                 messages.append(message)
                                 time.sleep(5) #5초 대기하고
+                                srt = SRT(sid, spw, verbose=False) #로그인까지 새롭게
                                 trains = srt.search_train(dep_station, arr_station, date, time_start, time_end, available_only=False)#expecting에서 trains 바로 하면 또 expecting
                             if "서비스가 접속이 원활하지 않습니다" in str(e):
                                 time.sleep(30) #잠시 대기
@@ -144,8 +146,10 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
                         message = 'Expecting value 오류'
                         logger.error(message)
                         time.sleep(5) #5초 대기하고
+                        srt = SRT(sid, spw, verbose=False) #로그인까지 새롭게
                         trains = srt.search_train(dep_station, arr_station, date, time_start, time_end, available_only=False)#expecting에서 trains 바로 하면 또 expecting
                         continue
+                        
                     if enable_telegram:
                         send_telegram_message(bot_token, chat_id, error_message)
                     time.sleep(5)
@@ -164,7 +168,6 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
                 time.sleep(60)
                 continue
             time.sleep(30)
-            srt = SRT(sid, spw, verbose=True)
         finally:
             stop_reservation = False
             if 'srt' in locals():
