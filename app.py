@@ -124,9 +124,8 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
                                 logger.error(message)
                                 output_queue.put(message)
                                 messages.append(message)
-                                # trains = srt.search_train(dep_station, arr_station, date, time_start, time_end, available_only=False)#expecting에서 trains하면 또 expecting
-                                time.sleep(5) #대신 5초 대기
-    
+                                time.sleep(5) #5초 대기하고
+                                trains = srt.search_train(dep_station, arr_station, date, time_start, time_end, available_only=False)#expecting에서 trains 바로 하면 또 expecting
                             if "서비스가 접속이 원활하지 않습니다" in str(e):
                                 time.sleep(30) #잠시 대기
                             
@@ -144,8 +143,8 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
                     if 'Expecting value' in str(e):
                         message = 'Expecting value 오류'
                         logger.error(message)
-                        # trains = srt.search_train(dep_station, arr_station, date, time_start, time_end, available_only=False)#expecting에서 trains하면 또 expecting
-                        time.sleep(5) #대신 5초 대기
+                        time.sleep(5) #5초 대기하고
+                        trains = srt.search_train(dep_station, arr_station, date, time_start, time_end, available_only=False)#expecting에서 trains 바로 하면 또 expecting
                         continue
                     if enable_telegram:
                         send_telegram_message(bot_token, chat_id, error_message)
