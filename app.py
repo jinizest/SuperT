@@ -257,8 +257,8 @@ if __name__ == '__main__':
     logFormatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s : Line %(lineno)s - %(message)s')
     
     # fileHandler, StreamHandler 생성
-    file_max_bytes = 100 * 1024 * 10 # 1 MB 사이즈
-    logFileHandler = logging.handlers.RotatingFileHandler(filename=log_path, maxBytes=file_max_bytes, backupCount=10, encoding='utf-8')
+    file_max_bytes = 10 * 1024 * 1024 # 10 MB 사이즈
+    logFileHandler = logging.handlers.RotatingFileHandler(filename=log_path, maxBytes=file_max_bytes, backupCount=20, encoding='utf-8')
     logStreamHandler = logging.StreamHandler()
     
     # handler 에 formatter 설정
