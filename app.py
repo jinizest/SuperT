@@ -69,94 +69,105 @@ def send_telegram_message(bot_token, chat_id, message):
 
 def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, time_end, phone_number, enable_telegram, bot_token, chat_id, num_adults, seat_type):
     global messages, stop_reservation
-    try:
-        srt = SRT(sid, spw, verbose=False)
-        trains = srt.search_train(dep_station, arr_station, date, time_start, time_end, available_only=False)
-
-        while not stop_reservation:
-            try:
-                message = '예약시도.....' + ' @' + datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-                logger.info(message)
-                output_queue.put(message)
-                time.sleep(DELAY)
-
-                if 'Expecting value' in str(trains):
-                    message = 'Expecting value 오류'
-                    logger.error(message)
+    while not stop_reservation:
+        try:
+            srt = SRT(sid, spw, verbose=False)
+            trains = srt.search_train(dep_station, arr_station, date, time_start, time_end, available_only=False)
+    
+            while not stop_reservation:
+                try:
+                    message = '예약시도.....' + ' @' + datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                    logger.info(message)
                     output_queue.put(message)
-                    messages.append(message)
-                    continue
-
-                for train in trains:
-                    logger.info(str(train))
-                    output_queue.put(str(train))
-
-                for train in trains:
-                    if stop_reservation:
-                        break
-                    try:
-                        passengers = [Adult() for _ in range(num_adults)] 
-                        # if "예약대기 가능" in str(train): #동탄~수서(16:20~16:37) 특실 예약가능, 일반실 예약가능, 예약대기 불가능:
-                        srt.reserve_standby_option_settings(phone_number, True, True)
-                        srt.reserve_standby(train)                        
-                        success_message = f"SRT 예약 대기 완료 {train}"
-                        if "예약가능" in str(train):
-                            srt.reserve(train, passengers=passengers, special_seat=seat_type)
-                            success_message = f"SRT 예약 완료, !!결재 필요!! {train}"
-                        else:
-                            continue                      
-                        messages.append(success_message)
-                        output_queue.put(success_message)
-                        
-                        if enable_telegram:
-                            send_telegram_message(bot_token, chat_id, success_message)
-                        logger.info("예약 성공했지만 계속 진행합니다.")
-                        continue #열차 여러개인데 첫번쨰 열차가 성공해도 두번쨰 세번째도 진행하도록
-                    except Exception as e:
-                        error_message = f"열차 {train}에 대한 오류 발생: {e}"
-                                
-                        if 'Expecting value' in str(e):
-                            message = 'Expecting value 오류'
-                            logger.error(message)
-                            output_queue.put(message)
-                            messages.append(message)
-                            trains = srt.search_train(dep_station, arr_station, date, time_start, time_end, available_only=False)#train정보 다시 가져오기
-
-                        if "서비스가 접속이 원활하지 않습니다" in str(e):
-                            time.sleep(30) #잠시 대기
-                        
-                        logger.error(error_message)
-                        output_queue.put(error_message)
-                        messages.append(error_message)
-
-            except Exception as e:
-                error_message = f"메인 루프에서 오류 발생: {e}"
-                logger.error(error_message)
-                output_queue.put(error_message)
-                messages.append(error_message)
-                if '사용자가 많아 접속이 원활하지 않습니다.' in str(e):
+                    time.sleep(DELAY)
+    
+                    if 'Expecting value' in str(trains):
+                        message = 'Expecting value 오류'
+                        logger.error(message)
+                        output_queue.put(message)
+                        messages.append(message)
+                        continue
+    
+                    for train in trains:
+                        logger.info(str(train))
+                        output_queue.put(str(train))
+    
+                    for train in trains:
+                        if stop_reservation:
+                            break
+                        try:
+                            passengers = [Adult() for _ in range(num_adults)] 
+                            # if "예약대기 가능" in str(train): #동탄~수서(16:20~16:37) 특실 예약가능, 일반실 예약가능, 예약대기 불가능:
+                            srt.reserve_standby_option_settings(phone_number, True, True)
+                            srt.reserve_standby(train)                        
+                            success_message = f"SRT 예약 대기 완료 {train}"
+                            if "예약가능" in str(train):
+                                srt.reserve(train, passengers=passengers, special_seat=seat_type)
+                                success_message = f"SRT 예약 완료, !!결재 필요!! {train}"
+                            else:
+                                continue                      
+                            messages.append(success_message)
+                            output_queue.put(success_message)
+                            
+                            if enable_telegram:
+                                send_telegram_message(bot_token, chat_id, success_message)
+                            logger.info("예약 성공했지만 계속 진행합니다.")
+                            continue #열차 여러개인데 첫번쨰 열차가 성공해도 두번쨰 세번째도 진행하도록
+                        except Exception as e:
+                            error_message = f"열차 {train}에 대한 오류 발생: {e}"
+                                    
+                            if 'Expecting value' in str(e):
+                                message = 'Expecting value 오류'
+                                logger.error(message)
+                                output_queue.put(message)
+                                messages.append(message)
+                                trains = srt.search_train(dep_station, arr_station, date, time_start, time_end, available_only=False)#train정보 다시 가져오기
+    
+                            if "서비스가 접속이 원활하지 않습니다" in str(e):
+                                time.sleep(30) #잠시 대기
+                            
+                            logger.error(error_message)
+                            output_queue.put(error_message)
+                            messages.append(error_message)
+    
+                except Exception as e:
+                    error_message = f"메인 루프에서 오류 발생: {e}"
+                    logger.error(error_message)
+                    output_queue.put(error_message)
+                    messages.append(error_message)
+                    if '사용자가 많아 접속이 원활하지 않습니다.' in str(e):
+                        time.sleep(5)
+                        srt = SRT(sid, spw, verbose=False)
+                        continue
+                    if 'Expecting value' in str(e):
+                        message = 'Expecting value 오류'
+                        logger.error(message)
+                        trains = srt.search_train(dep_station, arr_station, date, time_start, time_end, available_only=False)#train정보 다시 가져오기
+                        continue
+                    if enable_telegram:
+                        send_telegram_message(bot_token, chat_id, error_message)
                     time.sleep(5)
                     srt = SRT(sid, spw, verbose=False)
-                    continue
-                if enable_telegram:
-                    send_telegram_message(bot_token, chat_id, error_message)
-                time.sleep(5)
-                srt = SRT(sid, spw, verbose=False)
-
-    except Exception as main_e:
-        critical_error = f"심각한 오류 발생: {main_e}"
-        logger.critical(critical_error)
-        output_queue.put(critical_error)
-        messages.append(critical_error)
-        if enable_telegram:
-            send_telegram_message(bot_token, chat_id, critical_error)
-        time.sleep(30)
-        srt = SRT(sid, spw, verbose=True)
-    finally:
-        stop_reservation = False
-        if 'srt' in locals():
-            srt.logout()
-    return messages
+    
+        except Exception as main_e:
+            critical_error = f"심각한 오류 발생: {main_e}"
+            logger.critical(critical_error)
+            output_queue.put(critical_error)
+            messages.append(critical_error)
+            if enable_telegram:
+                send_telegram_message(bot_token, chat_id, critical_error)
+            if 'IP Address Blocked' in str(main_e):
+                message = 'IP Address Blocked'
+                logger.error(message)
+                time.sleep(60)
+                continue
+            time.sleep(30)
+            srt = SRT(sid, spw, verbose=True)
+        finally:
+            stop_reservation = False
+            if 'srt' in locals():
+                srt.logout()
+        return messages
 
 reservation_thread = None
 
