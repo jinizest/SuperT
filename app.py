@@ -13,7 +13,7 @@ import logging.handlers
 import configparser
 import io
 
-__version__ = "1.3.4"
+__version__ = "1.3.5"
 
 app = Flask(__name__)
 
@@ -176,14 +176,15 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
                     time.sleep(60)
                     if 'srt' in locals() and srt is not None: #로그아웃하고 로그인하게 하기
                         srt.logout()
-                        
                     srt = None
                     continue
+                    
                 time.sleep(30)
             finally:
                 stop_reservation = False
-                if 'srt' in locals():
+                if 'srt' in locals() and srt is not None:
                     srt.logout()
+                srt = None
             return messages
     
     except Exception as shut_e: #attempt 함수 종료되면 알림
