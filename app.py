@@ -100,7 +100,7 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
                         srt.reserve_standby_option_settings(phone_number, True, True)
                         srt.reserve_standby(train)                        
                         success_message = f"SRT 예약 대기 완료 {train}"
-                        elif "예약가능" in str(train):
+                        if "예약가능" in str(train):
                             srt.reserve(train, passengers=passengers, special_seat=seat_type)
                             success_message = f"SRT 예약 완료, !!결재 필요!! {train}"
                         else:
