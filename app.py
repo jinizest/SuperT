@@ -13,6 +13,35 @@ import io
 
 app = Flask(__name__)
 
+
+# Log 폴더 생성 (도커 실행 시 로그폴더 매핑)
+def make_folder(folder_name):
+    if not os.path.isdir(folder_name):
+        os.mkdir(folder_name)
+root_dir = str(os.path.dirname(os.path.realpath(__file__)))
+log_dir = root_dir + '/log/'
+make_folder(log_dir)
+conf_path = str(root_dir + '/'+ CONF_FILE)
+log_path = str(log_dir + '/' + CONF_LOGFILE)
+
+
+# formatter 생성
+logFormatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s : Line %(lineno)s - %(message)s')
+
+# fileHandler, StreamHandler 생성
+file_max_bytes = 100 * 1024 * 10 # 1 MB 사이즈
+logFileHandler = logging.handlers.RotatingFileHandler(filename=log_path, maxBytes=file_max_bytes, backupCount=10, encoding='utf-8')
+logStreamHandler = logging.StreamHandler()
+
+# handler 에 formatter 설정
+logFileHandler.setFormatter(logFormatter)
+logStreamHandler.setFormatter(logFormatter)
+logFileHandler.suffix = "%Y%m%d"
+
+logger.addHandler(logFileHandler)
+#logger.addHandler(logStreamHandler)
+
+
 def get_config(key, default=None):
     config = configparser.ConfigParser()
     config_file = '/share/srt/app.conf'
@@ -233,13 +262,10 @@ def stream():
     return Response(generate(), mimetype='text/event-stream')
 
 if __name__ == '__main__':
-    log_level = get_config('LOG_LEVEL', 'INFO').upper()
-    logging.basicConfig(
-        format='%(asctime)s.%(msecs)03d - %(levelname)s - %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S',
-        level=getattr(logging, log_level)
-    )
+    # 기존 로깅 설정 제거
+    # 위에 정의된 파일 저장 logger 사용
     logger = logging.getLogger(__name__)
+    
     try:
         port = int(get_config('PORT', 5000))
         logger.info(f"Starting SRT application on port {port}")
