@@ -14,7 +14,7 @@ import configparser
 import io
 import random
 
-__version__ = "1.4.0"
+__version__ = "1.4.1"
 
 app = Flask(__name__)
 
@@ -186,7 +186,7 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
                 if 'IP Address Blocked' in str(main_e):
                     message = 'IP Address Blocked'
                     logger.error(message)
-                    delay = 50 + randint (1,20) #+ (er_cnt*5) #그냥 delay 60초 + 랜덤으로 고정~
+                    delay = 50 + random.randint(1,20) #+ (er_cnt*5) #그냥 delay 60초 + 랜덤으로 고정~
                     time.sleep(delay)
                     if 'srt' in locals() and srt is not None: #로그아웃하고 로그인하게 하기
                         srt.logout()
