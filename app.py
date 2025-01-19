@@ -21,7 +21,6 @@ def make_folder(folder_name):
 root_dir = str(os.path.dirname(os.path.realpath(__file__)))
 log_dir = root_dir + '/log/'
 make_folder(log_dir)
-conf_path = str(root_dir + '/'+ CONF_FILE)
 log_path = str(log_dir + '/' + CONF_LOGFILE)
 
 
