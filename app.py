@@ -165,6 +165,9 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
                 message = 'IP Address Blocked'
                 logger.error(message)
                 time.sleep(60)
+                if 'srt' in locals(): #로그아웃하고 로그인하게 하기
+                    srt.logout()
+                    srt = None
                 continue
             time.sleep(30)
         finally:
