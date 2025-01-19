@@ -13,7 +13,7 @@ import logging.handlers
 import configparser
 import io
 
-__version__ = "1.3.7"
+__version__ = "1.3.8"
 
 app = Flask(__name__)
 
