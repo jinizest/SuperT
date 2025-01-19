@@ -13,7 +13,7 @@ import logging.handlers
 import configparser
 import io
 
-__version__ = "1.3.6"
+__version__ = "1.3.7"
 
 app = Flask(__name__)
 
@@ -71,6 +71,7 @@ def send_telegram_message(bot_token, chat_id, message):
             logger.error(f"메시지 전송에 실패했습니다. 상태 코드: {response.status_code}")
 
 def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, time_end, phone_number, enable_telegram, bot_token, chat_id, num_adults, seat_type):
+    er_cnt = 0
     global messages, stop_reservation
     try: #매크로 종료 알림림
         while not stop_reservation:
@@ -115,6 +116,7 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
                                 if enable_telegram:
                                     send_telegram_message(bot_token, chat_id, success_message)
                                 logger.info("예약 성공했지만 계속 진행합니다.")
+                                er_cnt = 0 #에러 카운트 리셋셋
                                 continue #열차 여러개인데 첫번쨰 열차가 성공해도 두번쨰 세번째도 진행하도록
                             except Exception as e:
                                 error_message = f"열차 {train}에 대한 오류 발생: {e}"
@@ -131,7 +133,7 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
                                     if 'srt' in locals() and srt is not None: #로그아웃하고 로그인하게 하기
                                         srt.logout()
                                         logger.error("SRT LOGOUT")
-                                    srt = None
+                                    del srt
                                     logger.error("SRT객체생성시도")
                                     srt = SRT(sid, spw, verbose=False) #로그인까지 새롭게
                                     trains = srt.search_train(dep_station, arr_station, date, time_start, time_end, available_only=False)#expecting에서 trains 바로 하면 또 expecting
@@ -156,7 +158,7 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
                             if 'srt' in locals() and srt is not None: #로그아웃하고 로그인하게 하기
                                 srt.logout()
                                 logger.error("SRT LOGOUT")
-                            srt = None
+                            del srt
                             logger.error("SRT객체생성시도")
                             srt = SRT(sid, spw, verbose=False) #로그인까지 새롭게
                             trains = srt.search_train(dep_station, arr_station, date, time_start, time_end, available_only=False)#expecting에서 trains 바로 하면 또 expecting
@@ -168,7 +170,8 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
                         srt = SRT(sid, spw, verbose=False)
         
             except Exception as main_e:
-                critical_error = f"심각한 오류 발생: {main_e}"
+                er_cnt += 1
+                critical_error = f"{er_cnt}번째 심각한 오류 발생: {main_e}"
                 logger.critical(critical_error)
                 output_queue.put(critical_error)
                 messages.append(critical_error)
@@ -177,11 +180,12 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
                 if 'IP Address Blocked' in str(main_e):
                     message = 'IP Address Blocked'
                     logger.error(message)
-                    time.sleep(60)
+                    delay = 60 + (er_cnt*5)
+                    time.sleep(delay)
                     if 'srt' in locals() and srt is not None: #로그아웃하고 로그인하게 하기
                         srt.logout()
                         logger.error("SRT LOGOUT")
-                    srt = None
+                    del srt
                     continue
                     
                 time.sleep(30)
@@ -189,7 +193,7 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
                 stop_reservation = False
                 if 'srt' in locals() and srt is not None:
                     srt.logout()
-                srt = None
+                del srt
             return messages
     
     except Exception as shut_e: #attempt 함수 종료되면 알림
