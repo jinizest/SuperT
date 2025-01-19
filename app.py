@@ -26,7 +26,7 @@ logfile = 'srtapp.log'
 log_path = str(log_dir + '/' + logfile)
 
 # 로깅 설정 @250119 simon
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('app')
 logger.setLevel(logging.INFO)
 
 # formatter 생성
