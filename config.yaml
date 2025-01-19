@@ -1,6 +1,6 @@
 ---
 name: "SRT Reservation System"
-version: "1.2.2"
+version: "1.2.3"
 slug: "srt_reservation"
 description: "SRT 예약 시스템"
 arch:
