@@ -2,16 +2,28 @@
 
 SHARE_DIR=/share/srt
 
-# 기존 /share/srt 디렉토리가 있으면 삭제합니다.
-if [ -d "$SHARE_DIR" ]; then
-    rm -rf "$SHARE_DIR"
-    echo "[Info] 기존 디렉토리 삭제됨: $SHARE_DIR"
-fi
 
-# 새로운 /share/srt 디렉토리를 생성합니다.
-mkdir -p $SHARE_DIR
-mkdir -p $SHARE_DIR/templates
-echo "[Info] 새로운 디렉토리 생성됨: $SHARE_DIR"
+
+
+if [ ! -f $SHARE_DIR/app.py ]; then
+	mkdir $SHARE_DIR
+	mv /app.py $SHARE_DIR
+    echo "[Info] app.py 없어서 디렉토리 생성: $SHARE_DIR"
+fi
+if [ ! -f $SHARE_DIR/templates/index.html ]; then
+	mkdir $SHARE_DIR/templates
+    echo "[Info] templats 폴더 없어서 디렉토리 생성: $SHARE_DIR/temlpates"
+fi
+# # 기존 /share/srt 디렉토리가 있으면 삭제합니다.
+# if [ -d "$SHARE_DIR" ]; then
+#     rm -rf "$SHARE_DIR"
+#     echo "[Info] 기존 디렉토리 삭제됨: $SHARE_DIR"
+# fi
+
+# # 새로운 /share/srt 디렉토리를 생성합니다.
+# mkdir -p $SHARE_DIR
+# mkdir -p $SHARE_DIR/templates
+# echo "[Info] 새로운 디렉토리 생성됨: $SHARE_DIR"
 
 # 설정파일 생성 및 복사이동
 /makeconf.sh
