@@ -13,7 +13,7 @@ import logging.handlers
 import configparser
 import io
 
-__version__ = "1.3.8"
+__version__ = "1.3.9"
 
 app = Flask(__name__)
 
@@ -82,6 +82,7 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
                 while not stop_reservation:
                     try:
                         message = '예약시도.....' + ' @' + datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                        trains = srt.search_train(dep_station, arr_station, date, time_start, time_end, available_only=False)
                         logger.info(message)
                         output_queue.put(message)
                         time.sleep(DELAY)
@@ -102,13 +103,15 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
                                 break
                             try:
                                 passengers = [Adult() for _ in range(num_adults)] 
-                                # if "예약대기 가능" in str(train): #동탄~수서(16:20~16:37) 특실 예약가능, 일반실 예약가능, 예약대기 불가능:
-                                srt.reserve_standby_option_settings(phone_number, True, True)
-                                srt.reserve_standby(train)                        
-                                success_message = f"SRT 예약 대기 완료 {train}"
-                                if "예약가능" in str(train):
+                                if "예약대기 가능" in str(train): #동탄~수서(16:20~16:37) 특실 예약가능, 일반실 예약가능, 예약대기 불가능:
+                                    srt.reserve_standby_option_settings(phone_number, True, True)
+                                    srt.reserve_standby(train)                        
+                                    success_message = f"SRT 예약 대기 완료 {train}"
+                                elif "예약가능" in str(train):
                                     srt.reserve(train, passengers=passengers, special_seat=seat_type)
                                     success_message = f"SRT 예약 완료, !!결재 필요!! {train}"
+                                else:
+                                    continue
     
                                 messages.append(success_message)
                                 output_queue.put(success_message)
@@ -133,7 +136,8 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
                                     if 'srt' in locals() and srt is not None: #로그아웃하고 로그인하게 하기
                                         srt.logout()
                                         logger.error("SRT LOGOUT")
-                                    del srt
+                                        del srt
+                                    srt = None
                                     logger.error("SRT객체생성시도")
                                     srt = SRT(sid, spw, verbose=False) #로그인까지 새롭게
                                     trains = srt.search_train(dep_station, arr_station, date, time_start, time_end, available_only=False)#expecting에서 trains 바로 하면 또 expecting
@@ -158,7 +162,8 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
                             if 'srt' in locals() and srt is not None: #로그아웃하고 로그인하게 하기
                                 srt.logout()
                                 logger.error("SRT LOGOUT")
-                            del srt
+                                del srt
+                            srt = None
                             logger.error("SRT객체생성시도")
                             srt = SRT(sid, spw, verbose=False) #로그인까지 새롭게
                             trains = srt.search_train(dep_station, arr_station, date, time_start, time_end, available_only=False)#expecting에서 trains 바로 하면 또 expecting
@@ -185,7 +190,8 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
                     if 'srt' in locals() and srt is not None: #로그아웃하고 로그인하게 하기
                         srt.logout()
                         logger.error("SRT LOGOUT")
-                    del srt
+                        del srt
+                    
                     continue
                     
                 time.sleep(30)
@@ -193,7 +199,8 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
                 stop_reservation = False
                 if 'srt' in locals() and srt is not None:
                     srt.logout()
-                del srt
+                    del srt
+                srt = None
             return messages
     
     except Exception as shut_e: #attempt 함수 종료되면 알림
