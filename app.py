@@ -43,7 +43,7 @@ logStreamHandler.setFormatter(logFormatter)
 logFileHandler.suffix = "%Y%m%d"
 
 logger.addHandler(logFileHandler)
-#logger.addHandler(logStreamHandler)
+logger.addHandler(logStreamHandler)
 
 
 def get_config(key, default=None):
