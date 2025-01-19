@@ -26,7 +26,6 @@ logfile = 'srtapp.log'
 log_path = str(log_dir + '/' + logfile)
 
 # 로깅 설정 @250119 simon
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
