@@ -13,7 +13,7 @@ import logging.handlers
 import configparser
 import io
 
-__version__ = "1.3.1"
+__version__ = "1.3.2"
 
 app = Flask(__name__)
 
@@ -128,6 +128,9 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
                                     output_queue.put(message)
                                     messages.append(message)
                                     time.sleep(5) #5초 대기하고
+                                    if if 'srt' in locals() and srt is not None:: #로그아웃하고 로그인하게 하기
+                                        srt.logout()
+                                    srt = None
                                     srt = SRT(sid, spw, verbose=False) #로그인까지 새롭게
                                     trains = srt.search_train(dep_station, arr_station, date, time_start, time_end, available_only=False)#expecting에서 trains 바로 하면 또 expecting
                                 if "서비스가 접속이 원활하지 않습니다" in str(e):
@@ -147,12 +150,15 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
                         if 'Expecting value' in str(e):
                             message = 'Expecting value 오류'
                             logger.error(message)
-                            time.sleep(5) #5초 대기하고
+                            time.sleep(10) #10초 대기하고
+                            if if 'srt' in locals() and srt is not None:: #로그아웃하고 로그인하게 하기
+                                srt.logout()
+                            srt = None
                             srt = SRT(sid, spw, verbose=False) #로그인까지 새롭게
                             trains = srt.search_train(dep_station, arr_station, date, time_start, time_end, available_only=False)#expecting에서 trains 바로 하면 또 expecting
                             continue
                             
-                        if enable_telegram:
+                        if enable_telegram: 
                             send_telegram_message(bot_token, chat_id, error_message)
                         time.sleep(5)
                         srt = SRT(sid, spw, verbose=False)
@@ -168,9 +174,10 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
                     message = 'IP Address Blocked'
                     logger.error(message)
                     time.sleep(60)
-                    if 'srt' in locals(): #로그아웃하고 로그인하게 하기
+                    if if 'srt' in locals() and srt is not None:: #로그아웃하고 로그인하게 하기
                         srt.logout()
-                        srt = None
+                        
+                    srt = None
                     continue
                 time.sleep(30)
             finally:
