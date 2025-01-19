@@ -1,0 +1,23 @@
+name: Update Version
+
+on:
+  push:
+    paths:
+      - 'app.py'
+
+jobs:
+  update-config:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Update config.yaml
+        run: |
+          version=$(grep -oP "__version__\s*=\s*['\"](.+)['\"]" app.py | cut -d'"' -f2)
+          sed -i "s/version:.*/version: \"$version\"/" config.yaml
+      - name: Commit changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add config.yaml
+          git commit -m "Update version in config.yaml" || echo "No changes to commit"
+          git push
