@@ -1,3 +1,4 @@
+
 from flask import Flask, render_template, request, jsonify, Response
 from SRT.passenger import Adult
 from SRT import SRT, SeatType
@@ -11,6 +12,8 @@ import logging
 import logging.handlers
 import configparser
 import io
+
+__version__ = "1.3.0"
 
 app = Flask(__name__)
 
