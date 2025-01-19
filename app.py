@@ -13,7 +13,7 @@ import logging.handlers
 import configparser
 import io
 
-__version__ = "1.3.2"
+__version__ = "1.3.3"
 
 app = Flask(__name__)
 
@@ -128,7 +128,7 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
                                     output_queue.put(message)
                                     messages.append(message)
                                     time.sleep(5) #5초 대기하고
-                                    if if 'srt' in locals() and srt is not None:: #로그아웃하고 로그인하게 하기
+                                    if 'srt' in locals() and srt is not None:: #로그아웃하고 로그인하게 하기
                                         srt.logout()
                                     srt = None
                                     srt = SRT(sid, spw, verbose=False) #로그인까지 새롭게
@@ -151,7 +151,7 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
                             message = 'Expecting value 오류'
                             logger.error(message)
                             time.sleep(10) #10초 대기하고
-                            if if 'srt' in locals() and srt is not None:: #로그아웃하고 로그인하게 하기
+                            if 'srt' in locals() and srt is not None:: #로그아웃하고 로그인하게 하기
                                 srt.logout()
                             srt = None
                             srt = SRT(sid, spw, verbose=False) #로그인까지 새롭게
@@ -174,7 +174,7 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
                     message = 'IP Address Blocked'
                     logger.error(message)
                     time.sleep(60)
-                    if if 'srt' in locals() and srt is not None:: #로그아웃하고 로그인하게 하기
+                    if 'srt' in locals() and srt is not None:: #로그아웃하고 로그인하게 하기
                         srt.logout()
                         
                     srt = None
