@@ -28,6 +28,7 @@ log_path = str(log_dir + '/' + logfile)
 # 로깅 설정 @250119 simon
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 # formatter 생성
 logFormatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s : Line %(lineno)s - %(message)s')
