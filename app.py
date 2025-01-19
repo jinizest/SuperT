@@ -21,7 +21,8 @@ def make_folder(folder_name):
 root_dir = str(os.path.dirname(os.path.realpath(__file__)))
 log_dir = root_dir + '/log/'
 make_folder(log_dir)
-log_path = str(log_dir + '/' + CONF_LOGFILE)
+logfile = 'srtapp.log'
+log_path = str(log_dir + '/' + logfile)
 
 
 # formatter 생성
