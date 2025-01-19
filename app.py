@@ -25,25 +25,7 @@ make_folder(log_dir)
 logfile = 'srtapp.log'
 log_path = str(log_dir + '/' + logfile)
 
-# 로깅 설정 @250119 simon
-logger = logging.getLogger('app')
-logger.setLevel(logging.INFO)
 
-# formatter 생성
-logFormatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s : Line %(lineno)s - %(message)s')
-
-# fileHandler, StreamHandler 생성
-file_max_bytes = 100 * 1024 * 10 # 1 MB 사이즈
-logFileHandler = logging.handlers.RotatingFileHandler(filename=log_path, maxBytes=file_max_bytes, backupCount=10, encoding='utf-8')
-logStreamHandler = logging.StreamHandler()
-
-# handler 에 formatter 설정
-logFileHandler.setFormatter(logFormatter)
-logStreamHandler.setFormatter(logFormatter)
-logFileHandler.suffix = "%Y%m%d"
-
-logger.addHandler(logFileHandler)
-logger.addHandler(logStreamHandler)
 
 
 def get_config(key, default=None):
@@ -266,9 +248,26 @@ def stream():
     return Response(generate(), mimetype='text/event-stream')
 
 if __name__ == '__main__':
-    # 기존 로깅 설정 제거
-    # 위에 정의된 파일 저장 logger 사용
-    logger = logging.getLogger(__name__)
+    
+    #logger 인스턴스 생성 및 로그레벨 설정
+    logger = logging.getLogger('app')
+    logger.setLevel(logging.INFO)
+    
+    # formatter 생성
+    logFormatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s : Line %(lineno)s - %(message)s')
+    
+    # fileHandler, StreamHandler 생성
+    file_max_bytes = 100 * 1024 * 10 # 1 MB 사이즈
+    logFileHandler = logging.handlers.RotatingFileHandler(filename=log_path, maxBytes=file_max_bytes, backupCount=10, encoding='utf-8')
+    logStreamHandler = logging.StreamHandler()
+    
+    # handler 에 formatter 설정
+    logFileHandler.setFormatter(logFormatter)
+    logStreamHandler.setFormatter(logFormatter)
+    logFileHandler.suffix = "%Y%m%d"
+    
+    logger.addHandler(logFileHandler)
+    logger.addHandler(logStreamHandler)
     
     try:
         port = int(get_config('PORT', 5000))
