@@ -13,7 +13,7 @@ import logging.handlers
 import configparser
 import io
 
-__version__ = "1.3.5"
+__version__ = "1.3.6"
 
 app = Flask(__name__)
 
@@ -130,7 +130,9 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
                                     time.sleep(5) #5초 대기하고
                                     if 'srt' in locals() and srt is not None: #로그아웃하고 로그인하게 하기
                                         srt.logout()
+                                        logger.error("SRT LOGOUT")
                                     srt = None
+                                    logger.error("SRT객체생성시도")
                                     srt = SRT(sid, spw, verbose=False) #로그인까지 새롭게
                                     trains = srt.search_train(dep_station, arr_station, date, time_start, time_end, available_only=False)#expecting에서 trains 바로 하면 또 expecting
                                 if "서비스가 접속이 원활하지 않습니다" in str(e):
@@ -153,7 +155,9 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
                             time.sleep(10) #10초 대기하고
                             if 'srt' in locals() and srt is not None: #로그아웃하고 로그인하게 하기
                                 srt.logout()
+                                logger.error("SRT LOGOUT")
                             srt = None
+                            logger.error("SRT객체생성시도")
                             srt = SRT(sid, spw, verbose=False) #로그인까지 새롭게
                             trains = srt.search_train(dep_station, arr_station, date, time_start, time_end, available_only=False)#expecting에서 trains 바로 하면 또 expecting
                             continue
@@ -176,6 +180,7 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
                     time.sleep(60)
                     if 'srt' in locals() and srt is not None: #로그아웃하고 로그인하게 하기
                         srt.logout()
+                        logger.error("SRT LOGOUT")
                     srt = None
                     continue
                     
