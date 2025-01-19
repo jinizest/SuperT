@@ -115,20 +115,22 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
                             continue #열차 여러개인데 첫번쨰 열차가 성공해도 두번쨰 세번째도 진행하도록
                         except Exception as e:
                             error_message = f"열차 {train}에 대한 오류 발생: {e}"
+                            logger.error(error_message)
+                            output_queue.put(error_message)
+                            messages.append(error_message)
                                     
                             if 'Expecting value' in str(e):
                                 message = 'Expecting value 오류'
                                 logger.error(message)
                                 output_queue.put(message)
                                 messages.append(message)
-                                trains = srt.search_train(dep_station, arr_station, date, time_start, time_end, available_only=False)#train정보 다시 가져오기
+                                # trains = srt.search_train(dep_station, arr_station, date, time_start, time_end, available_only=False)#expecting에서 trains하면 또 expecting
+                                time.sleep(5) #대신 5초 대기
     
                             if "서비스가 접속이 원활하지 않습니다" in str(e):
                                 time.sleep(30) #잠시 대기
                             
-                            logger.error(error_message)
-                            output_queue.put(error_message)
-                            messages.append(error_message)
+
     
                 except Exception as e:
                     error_message = f"메인 루프에서 오류 발생: {e}"
@@ -142,7 +144,8 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
                     if 'Expecting value' in str(e):
                         message = 'Expecting value 오류'
                         logger.error(message)
-                        trains = srt.search_train(dep_station, arr_station, date, time_start, time_end, available_only=False)#train정보 다시 가져오기
+                        # trains = srt.search_train(dep_station, arr_station, date, time_start, time_end, available_only=False)#expecting에서 trains하면 또 expecting
+                        time.sleep(5) #대신 5초 대기
                         continue
                     if enable_telegram:
                         send_telegram_message(bot_token, chat_id, error_message)
