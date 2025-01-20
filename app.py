@@ -14,7 +14,7 @@ import configparser
 import io
 import random
 
-__version__ = "1.4.2"
+__version__ = "1.4.3"
 
 app = Flask(__name__)
 
@@ -140,6 +140,7 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
                                         logger.error("SRT LOGOUT")
                                         del srt
                                     srt = None
+                                    time.sleep(3) # 로그인 하면 ip 밴이라 그 전에 3초 대기기
                                     logger.error("SRT객체생성시도")
                                     srt = SRT(sid, spw, verbose=False) #로그인까지 새롭게
                                     trains = srt.search_train(dep_station, arr_station, date, time_start, time_end, available_only=False)#expecting에서 trains 바로 하면 또 expecting
