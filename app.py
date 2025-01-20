@@ -14,7 +14,7 @@ import configparser
 import io
 import random
 
-__version__ = "1.4.1"
+__version__ = "1.4.2"
 
 app = Flask(__name__)
 
@@ -104,15 +104,16 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
                                 break
                             try:
                                 passengers = [Adult() for _ in range(num_adults)] 
-                                if "예약대기 가능" in str(train): #동탄~수서(16:20~16:37) 특실 예약가능, 일반실 예약가능, 예약대기 불가능:
-                                    srt.reserve_standby_option_settings(phone_number, True, True)
-                                    srt.reserve_standby(train)                        
-                                    success_message = f"SRT 예약 대기 완료 {train}"
-                                elif "예약가능" in str(train):
+
+                                if "예약가능" in str(train):
                                     srt.reserve(train, passengers=passengers, special_seat=seat_type)
                                     success_message = f"SRT 예약 완료, !!결재 필요!! {train}"
-                                else:
-                                    continue
+                                # if "예약대기 가능" in str(train): #동탄~수서(16:20~16:37) 특실 예약가능, 일반실 예약가능, 예약대기 불가능:
+                                srt.reserve_standby_option_settings(phone_number, True, True)
+                                srt.reserve_standby(train)                        
+                                success_message = f"SRT 예약 대기 완료 {train}"
+                                # else:
+                                #     continue
     
                                 messages.append(success_message)
                                 output_queue.put(success_message)
