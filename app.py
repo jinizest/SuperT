@@ -99,7 +99,7 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
                             logger.info(str(train))
                             output_queue.put(str(train))
         
-                        for train in trains:
+                        for train in trains:                            
                             if stop_reservation:
                                 break
                             try:
@@ -146,6 +146,8 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
                                     trains = srt.search_train(dep_station, arr_station, date, time_start, time_end, available_only=False)#expecting에서 trains 바로 하면 또 expecting
                                 if "서비스가 접속이 원활하지 않습니다" in str(e):
                                     time.sleep(30) #잠시 대기
+
+                            time.sleep(0.5) #for문 train 사이사이 딜레이 두기
                                 
     
         
