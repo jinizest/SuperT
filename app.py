@@ -14,7 +14,7 @@ import configparser
 import io
 import random
 
-__version__ = "1.4.4"
+__version__ = "1.4.5"
 
 app = Flask(__name__)
 
@@ -78,8 +78,7 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
         while not stop_reservation:
             try:
                 srt = SRT(sid, spw, verbose=False)
-                trains = srt.search_train(dep_station, arr_station, date, time_start, time_end, available_only=False)
-        
+                time.sleep(0.5)
                 while not stop_reservation:
                     try:
                         message = '예약시도.....' + ' @' + datetime.now().strftime('%Y-%m-%d %H:%M:%S')
@@ -121,7 +120,7 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
                                 if enable_telegram:
                                     send_telegram_message(bot_token, chat_id, success_message)
                                 logger.info("예약 성공했지만 계속 진행합니다.")
-                                er_cnt = 0 #에러 카운트 리셋셋
+                                er_cnt = 0 #에러 카운트 리셋
                                 continue #열차 여러개인데 첫번쨰 열차가 성공해도 두번쨰 세번째도 진행하도록
                             except Exception as e:
                                 error_message = f"열차 {train}에 대한 오류 발생: {e}"
@@ -143,11 +142,12 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
                                     time.sleep(3) # 로그인 하면 ip 밴이라 그 전에 3초 대기기
                                     logger.error("SRT객체생성시도")
                                     srt = SRT(sid, spw, verbose=False) #로그인까지 새롭게
+                                    time.sleep(0.5)
                                     trains = srt.search_train(dep_station, arr_station, date, time_start, time_end, available_only=False)#expecting에서 trains 바로 하면 또 expecting
                                 if "서비스가 접속이 원활하지 않습니다" in str(e):
                                     time.sleep(30) #잠시 대기
 
-                            time.sleep(0.5) #for문 train 사이사이 딜레이 두기
+                            time.sleep(0.3) #for문 train 사이사이 딜레이 두기
                                 
     
         
@@ -171,7 +171,8 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
                             srt = None
                             logger.error("SRT객체생성시도")
                             srt = SRT(sid, spw, verbose=False) #로그인까지 새롭게
-                            trains = srt.search_train(dep_station, arr_station, date, time_start, time_end, available_only=False)#expecting에서 trains 바로 하면 또 expecting
+                            time.sleep(0.5)
+                            # trains = srt.search_train(dep_station, arr_station, date, time_start, time_end, available_only=False)#expecting에서 trains 바로 하면 또 expecting
                             continue
                             
                         if enable_telegram: 
