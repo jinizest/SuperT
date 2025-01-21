@@ -14,7 +14,7 @@ import configparser
 import io
 import random
 
-__version__ = "1.4.3"
+__version__ = "1.4.4"
 
 app = Flask(__name__)
 
