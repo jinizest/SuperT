@@ -14,7 +14,7 @@ import configparser
 import io
 import random
 
-__version__ = "1.4.5"
+__version__ = "1.4.6"
 
 app = Flask(__name__)
 
@@ -147,7 +147,7 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
                                 if "서비스가 접속이 원활하지 않습니다" in str(e):
                                     time.sleep(30) #잠시 대기
 
-                            time.sleep(0.3) #for문 train 사이사이 딜레이 두기
+                            time.sleep(0.5) #for문 train 사이사이 딜레이 두기
                                 
     
         
