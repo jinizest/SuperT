@@ -328,7 +328,7 @@ if __name__ == '__main__':
     
     try:
         port = int(get_config('PORT', 5000))
-        logger.info(f"Starting SRT application on port {port}")
+        logger.info(f"Starting SRT application ver {__version__} on port {port}")
         app.run(host='0.0.0.0', port=port)
     except Exception as e:
         logger.error(f"Error starting application: {e}")
