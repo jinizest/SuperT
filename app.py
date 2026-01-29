@@ -13,6 +13,7 @@ import logging.handlers
 import configparser
 import io
 import random
+from typing import Dict
 
 __version__ = "1.4.6"
 
@@ -57,6 +58,52 @@ TELEGRAM_BOT_TOKEN = get_config('telegram_bot_token', '')
 TELEGRAM_CHAT_ID = get_config('telegram_chat_id', '')
 PHONE_NUMBER = get_config('phone_number', '')
 DELAY = int(get_config('time_delay', '1'))
+TELEGRAM_ERROR_COOLDOWN = int(get_config('telegram_error_cooldown', '600'))
+ERROR_BACKOFF_BASE = int(get_config('error_backoff_base', '5'))
+ERROR_BACKOFF_MAX = int(get_config('error_backoff_max', '120'))
+
+NETFUNNEL_ALERT_EVERY = int(get_config('netfunnel_alert_every', '10'))
+netfunnel_alert_counter = 0
+last_telegram_error_sent: Dict[str, float] = {}
+
+def is_transient_service_error(message):
+    return "서비스가 접속이 원활하지 않습니다" in message
+
+def is_netfunnel_error(message):
+    return "NetFunnel" in message or "Wrong Server ID" in message
+
+def is_connection_error(message):
+    return "Connection aborted" in message or "RemoteDisconnected" in message or "ConnectionError" in message
+
+def categorize_error(message):
+    if is_netfunnel_error(message):
+        return "netfunnel"
+    if is_transient_service_error(message):
+        return "service_unavailable"
+    if is_connection_error(message):
+        return "connection"
+    if "Expecting value" in message:
+        return "expecting_value"
+    return "generic"
+
+def should_send_error_telegram(message):
+    category = categorize_error(message)
+    if category == "netfunnel":
+        global netfunnel_alert_counter
+        netfunnel_alert_counter += 1
+        if netfunnel_alert_counter % max(1, NETFUNNEL_ALERT_EVERY) != 0:
+            return False
+    now = time.time()
+    last_sent = last_telegram_error_sent.get(category, 0)
+    if now - last_sent < TELEGRAM_ERROR_COOLDOWN:
+        return False
+    last_telegram_error_sent[category] = now
+    return True
+
+def calculate_backoff(failure_count):
+    base = min(ERROR_BACKOFF_MAX, ERROR_BACKOFF_BASE * max(1, failure_count))
+    jitter = random.randint(0, 3)
+    return min(ERROR_BACKOFF_MAX, base + jitter)
 
 def send_telegram_message(bot_token, chat_id, message):
     if bot_token and chat_id:
@@ -73,6 +120,8 @@ def send_telegram_message(bot_token, chat_id, message):
 
 def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, time_end, phone_number, enable_telegram, bot_token, chat_id, num_adults, seat_type):
     er_cnt = 0
+    netfunnel_failures = 0
+    service_failures = 0
     global messages, stop_reservation
     try: #매크로 종료 알림림
         while not stop_reservation:
@@ -83,6 +132,8 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
                     try:
                         message = '예약시도.....' + ' @' + datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                         trains = srt.search_train(dep_station, arr_station, date, time_start, time_end, available_only=False)
+                        netfunnel_failures = 0
+                        service_failures = 0
                         logger.info(message)
                         output_queue.put(message)
                         time.sleep(DELAY)
@@ -98,6 +149,7 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
                             logger.info(str(train))
                             output_queue.put(str(train))
         
+                        retry_search = False
                         for train in trains:                            
                             if stop_reservation:
                                 break
@@ -120,6 +172,8 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
                                 if enable_telegram:
                                     send_telegram_message(bot_token, chat_id, success_message)
                                 logger.info("예약 성공했지만 계속 진행합니다.")
+                                netfunnel_failures = 0
+                                service_failures = 0
                                 er_cnt = 0 #에러 카운트 리셋
                                 continue #열차 여러개인데 첫번쨰 열차가 성공해도 두번쨰 세번째도 진행하도록
                             except Exception as e:
@@ -127,7 +181,23 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
                                 logger.error(error_message)
                                 output_queue.put(error_message)
                                 messages.append(error_message)
-                                        
+
+                                if is_netfunnel_error(str(e)) or is_transient_service_error(str(e)):
+                                    if is_netfunnel_error(str(e)):
+                                        netfunnel_failures += 1
+                                    if is_transient_service_error(str(e)):
+                                        service_failures += 1
+                                    backoff = calculate_backoff(max(netfunnel_failures, service_failures))
+                                    logger.warning(f"일시적 오류 감지: {e} - {backoff}초 대기 후 재시도합니다.")
+                                    if 'srt' in locals() and srt is not None:
+                                        srt.logout()
+                                        del srt
+                                    time.sleep(backoff)
+                                    srt = SRT(sid, spw, verbose=False)
+                                    time.sleep(0.5)
+                                    retry_search = True
+                                    break
+
                                 if 'Expecting value' in str(e):
                                     message = 'Expecting value 오류'
                                     logger.error(message)
@@ -148,6 +218,8 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
                                     time.sleep(30) #잠시 대기
 
                             time.sleep(0.5) #for문 train 사이사이 딜레이 두기
+                        if retry_search:
+                            continue
                                 
     
         
@@ -156,6 +228,35 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
                         logger.error(error_message)
                         output_queue.put(error_message)
                         messages.append(error_message)
+                        if is_connection_error(str(e)):
+                            backoff = calculate_backoff(max(1, er_cnt))
+                            logger.warning(f"연결 오류 감지: {e} - {backoff}초 대기 후 재시도합니다.")
+                            if 'srt' in locals() and srt is not None:
+                                srt.logout()
+                                del srt
+                            time.sleep(backoff)
+                            srt = SRT(sid, spw, verbose=False)
+                            continue
+                        if is_netfunnel_error(str(e)):
+                            netfunnel_failures += 1
+                            backoff = calculate_backoff(netfunnel_failures)
+                            logger.warning(f"NetFunnel 오류 감지: {e} - {backoff}초 대기 후 재시도합니다.")
+                            if 'srt' in locals() and srt is not None:
+                                srt.logout()
+                                del srt
+                            time.sleep(backoff)
+                            srt = SRT(sid, spw, verbose=False)
+                            continue
+                        if is_transient_service_error(str(e)):
+                            service_failures += 1
+                            backoff = calculate_backoff(service_failures)
+                            logger.warning(f"접속 불안정 오류 감지: {e} - {backoff}초 대기 후 재시도합니다.")
+                            if 'srt' in locals() and srt is not None:
+                                srt.logout()
+                                del srt
+                            time.sleep(backoff)
+                            srt = SRT(sid, spw, verbose=False)
+                            continue
                         if '사용자가 많아 접속이 원활하지 않습니다.' in str(e):
                             time.sleep(5)
                             srt = SRT(sid, spw, verbose=False)
@@ -175,7 +276,7 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
                             # trains = srt.search_train(dep_station, arr_station, date, time_start, time_end, available_only=False)#expecting에서 trains 바로 하면 또 expecting
                             continue
                             
-                        if enable_telegram: 
+                        if enable_telegram and should_send_error_telegram(error_message):
                             send_telegram_message(bot_token, chat_id, error_message)
                         time.sleep(5)
                         srt = SRT(sid, spw, verbose=False)
@@ -186,8 +287,16 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
                 logger.critical(critical_error)
                 output_queue.put(critical_error)
                 messages.append(critical_error)
-                if enable_telegram:
+                if enable_telegram and should_send_error_telegram(critical_error):
                     send_telegram_message(bot_token, chat_id, critical_error)
+                if is_connection_error(str(main_e)):
+                    backoff = calculate_backoff(er_cnt)
+                    logger.warning(f"심각한 연결 오류 감지: {main_e} - {backoff}초 대기 후 재시도합니다.")
+                    if 'srt' in locals() and srt is not None:
+                        srt.logout()
+                        del srt
+                    time.sleep(backoff)
+                    continue
                 if 'IP Address Blocked' in str(main_e):
                     message = 'IP Address Blocked'
                     logger.error(message)
@@ -207,7 +316,7 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
                     srt.logout()
                     del srt
                 srt = None
-            return messages
+            continue
     
     except Exception as shut_e: #attempt 함수 종료되면 알림
         shut_error = f"!!!MACRO 정지!!!확인필요!!!: {shut_e}"
