@@ -46,10 +46,12 @@ def get_config(key, default=None):
         logger.error(f"설정 파일을 찾을 수 없습니다: {config_file}")
         return default
 
-global messages, stop_reservation, output_queue
+global messages, output_queue
 messages = []
-stop_reservation = False
 output_queue = queue.Queue()
+stop_event = threading.Event()
+current_srt = None
+current_srt_lock = threading.Lock()
 
 # 설정 값 가져오기
 SRT_ID = get_config('srt_id', '')
@@ -118,17 +120,41 @@ def send_telegram_message(bot_token, chat_id, message):
         else:
             logger.error(f"메시지 전송에 실패했습니다. 상태 코드: {response.status_code}")
 
+class StopReservation(Exception):
+    pass
+
+def wait_or_stop(seconds):
+    if stop_event.wait(seconds):
+        raise StopReservation
+
+def stop_if_requested():
+    if stop_event.is_set():
+        raise StopReservation
+
+def set_current_srt(instance):
+    global current_srt
+    with current_srt_lock:
+        current_srt = instance
+
+def clear_current_srt():
+    global current_srt
+    with current_srt_lock:
+        current_srt = None
+
 def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, time_end, phone_number, enable_telegram, bot_token, chat_id, num_adults, seat_type):
     er_cnt = 0
     netfunnel_failures = 0
     service_failures = 0
-    global messages, stop_reservation
+    global messages
     try: #매크로 종료 알림림
-        while not stop_reservation:
+        while True:
+            stop_if_requested()
             try:
                 srt = SRT(sid, spw, verbose=False)
-                time.sleep(0.5)
-                while not stop_reservation:
+                set_current_srt(srt)
+                wait_or_stop(0.5)
+                while True:
+                    stop_if_requested()
                     try:
                         message = '예약시도.....' + ' @' + datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                         trains = srt.search_train(dep_station, arr_station, date, time_start, time_end, available_only=False)
@@ -136,7 +162,7 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
                         service_failures = 0
                         logger.info(message)
                         output_queue.put(message)
-                        time.sleep(DELAY)
+                        wait_or_stop(DELAY)
         
                         if 'Expecting value' in str(trains):
                             message = 'Expecting value 오류'
@@ -151,8 +177,7 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
         
                         retry_search = False
                         for train in trains:                            
-                            if stop_reservation:
-                                break
+                            stop_if_requested()
                             try:
                                 passengers = [Adult() for _ in range(num_adults)] 
 
@@ -176,6 +201,8 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
                                 service_failures = 0
                                 er_cnt = 0 #에러 카운트 리셋
                                 continue #열차 여러개인데 첫번쨰 열차가 성공해도 두번쨰 세번째도 진행하도록
+                            except StopReservation:
+                                raise
                             except Exception as e:
                                 error_message = f"열차 {train}에 대한 오류 발생: {e}"
                                 logger.error(error_message)
@@ -192,9 +219,10 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
                                     if 'srt' in locals() and srt is not None:
                                         srt.logout()
                                         del srt
-                                    time.sleep(backoff)
+                                    wait_or_stop(backoff)
                                     srt = SRT(sid, spw, verbose=False)
-                                    time.sleep(0.5)
+                                    set_current_srt(srt)
+                                    wait_or_stop(0.5)
                                     retry_search = True
                                     break
 
@@ -203,26 +231,30 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
                                     logger.error(message)
                                     output_queue.put(message)
                                     messages.append(message)
-                                    time.sleep(5) #5초 대기하고
+                                    wait_or_stop(5) #5초 대기하고
                                     if 'srt' in locals() and srt is not None: #로그아웃하고 로그인하게 하기
                                         srt.logout()
                                         logger.error("SRT LOGOUT")
                                         del srt
+                                    clear_current_srt()
                                     srt = None
-                                    time.sleep(3) # 로그인 하면 ip 밴이라 그 전에 3초 대기기
+                                    wait_or_stop(3) # 로그인 하면 ip 밴이라 그 전에 3초 대기기
                                     logger.error("SRT객체생성시도")
                                     srt = SRT(sid, spw, verbose=False) #로그인까지 새롭게
-                                    time.sleep(0.5)
+                                    set_current_srt(srt)
+                                    wait_or_stop(0.5)
                                     trains = srt.search_train(dep_station, arr_station, date, time_start, time_end, available_only=False)#expecting에서 trains 바로 하면 또 expecting
                                 if "서비스가 접속이 원활하지 않습니다" in str(e):
-                                    time.sleep(30) #잠시 대기
+                                    wait_or_stop(30) #잠시 대기
 
-                            time.sleep(0.5) #for문 train 사이사이 딜레이 두기
+                            wait_or_stop(0.5) #for문 train 사이사이 딜레이 두기
                         if retry_search:
                             continue
                                 
     
         
+                    except StopReservation:
+                        raise
                     except Exception as e:
                         error_message = f"메인 루프에서 오류 발생: {e}"
                         logger.error(error_message)
@@ -234,8 +266,10 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
                             if 'srt' in locals() and srt is not None:
                                 srt.logout()
                                 del srt
-                            time.sleep(backoff)
+                            clear_current_srt()
+                            wait_or_stop(backoff)
                             srt = SRT(sid, spw, verbose=False)
+                            set_current_srt(srt)
                             continue
                         if is_netfunnel_error(str(e)):
                             netfunnel_failures += 1
@@ -244,8 +278,10 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
                             if 'srt' in locals() and srt is not None:
                                 srt.logout()
                                 del srt
-                            time.sleep(backoff)
+                            clear_current_srt()
+                            wait_or_stop(backoff)
                             srt = SRT(sid, spw, verbose=False)
+                            set_current_srt(srt)
                             continue
                         if is_transient_service_error(str(e)):
                             service_failures += 1
@@ -254,33 +290,41 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
                             if 'srt' in locals() and srt is not None:
                                 srt.logout()
                                 del srt
-                            time.sleep(backoff)
+                            clear_current_srt()
+                            wait_or_stop(backoff)
                             srt = SRT(sid, spw, verbose=False)
+                            set_current_srt(srt)
                             continue
                         if '사용자가 많아 접속이 원활하지 않습니다.' in str(e):
-                            time.sleep(5)
+                            wait_or_stop(5)
                             srt = SRT(sid, spw, verbose=False)
+                            set_current_srt(srt)
                             continue
                         if 'Expecting value' in str(e):
                             message = 'Expecting value 오류'
                             logger.error(message)
-                            time.sleep(10) #10초 대기하고
+                            wait_or_stop(10) #10초 대기하고
                             if 'srt' in locals() and srt is not None: #로그아웃하고 로그인하게 하기
                                 srt.logout()
                                 logger.error("SRT LOGOUT")
                                 del srt
+                            clear_current_srt()
                             srt = None
                             logger.error("SRT객체생성시도")
                             srt = SRT(sid, spw, verbose=False) #로그인까지 새롭게
-                            time.sleep(0.5)
+                            set_current_srt(srt)
+                            wait_or_stop(0.5)
                             # trains = srt.search_train(dep_station, arr_station, date, time_start, time_end, available_only=False)#expecting에서 trains 바로 하면 또 expecting
                             continue
                             
                         if enable_telegram and should_send_error_telegram(error_message):
                             send_telegram_message(bot_token, chat_id, error_message)
-                        time.sleep(5)
+                        wait_or_stop(5)
                         srt = SRT(sid, spw, verbose=False)
+                        set_current_srt(srt)
         
+            except StopReservation:
+                raise
             except Exception as main_e:
                 er_cnt += 1
                 critical_error = f"{er_cnt}번째 심각한 오류 발생: {main_e}"
@@ -295,45 +339,51 @@ def attempt_reservation(sid, spw, dep_station, arr_station, date, time_start, ti
                     if 'srt' in locals() and srt is not None:
                         srt.logout()
                         del srt
-                    time.sleep(backoff)
+                    clear_current_srt()
+                    wait_or_stop(backoff)
                     continue
                 if 'IP Address Blocked' in str(main_e):
                     message = 'IP Address Blocked'
                     logger.error(message)
                     delay = 50 + random.randint(1,20) #+ (er_cnt*5) #그냥 delay 60초 + 랜덤으로 고정~
-                    time.sleep(delay)
+                    wait_or_stop(delay)
                     if 'srt' in locals() and srt is not None: #로그아웃하고 로그인하게 하기
                         srt.logout()
                         logger.error("SRT LOGOUT")
                         del srt
+                    clear_current_srt()
                     
                     continue
                     
-                time.sleep(30)
+                wait_or_stop(30)
             finally:
-                stop_reservation = False
                 if 'srt' in locals() and srt is not None:
                     srt.logout()
                     del srt
+                clear_current_srt()
                 srt = None
             continue
-    
+    except StopReservation:
+        logger.info("예약 중단 요청이 감지되어 프로세스를 종료합니다.")
     except Exception as shut_e: #attempt 함수 종료되면 알림
         shut_error = f"!!!MACRO 정지!!!확인필요!!!: {shut_e}"
         logger.error(shut_error)
         if enable_telegram:
             send_telegram_message(bot_token, chat_id, shut_error)
+    finally:
+        global reservation_thread
+        reservation_thread = None
 
 reservation_thread = None
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
-    global reservation_thread, stop_reservation
+    global reservation_thread
     if request.method == 'POST':
         if reservation_thread and reservation_thread.is_alive():
             return jsonify({'message': '이미 예약 프로세스가 실행 중입니다.'})
         
-        stop_reservation = False
+        stop_event.clear()
         sid = request.form.get('sid', SRT_ID)
         spw = request.form.get('spw', SRT_PASSWORD)
         dep_station = request.form['dep_station']
@@ -352,7 +402,7 @@ def index():
         
         # 새로운 입력 필드 추가
         num_adults = int(request.form.get('num_adults', 1))
-        seat_type = 'GENERAL_FIRST'
+        seat_type = request.form.get('seat_type', 'GENERAL_FIRST')
 
         reservation_thread = threading.Thread(target=attempt_reservation, args=(sid, spw, dep_station, arr_station, date, start_time, end_time, phone_number, enable_telegram, bot_token, chat_id, num_adults, seat_type))
         reservation_thread.start()
@@ -367,12 +417,28 @@ def index():
     }
     return render_template('index.html', **default_values)
 
+@app.route('/status', methods=['GET'])
+def status():
+    is_running = reservation_thread is not None and reservation_thread.is_alive()
+    return jsonify({
+        'running': is_running,
+        'stop_requested': stop_event.is_set()
+    })
+
 @app.route('/stop', methods=['POST'])
 def stop():
-    global stop_reservation
-    stop_reservation = True
-    if 'srt' in globals():
-        srt.logout()
+    global reservation_thread
+    stop_event.set()
+    with current_srt_lock:
+        if current_srt is not None:
+            try:
+                current_srt.logout()
+            except Exception as e:
+                logger.warning(f"중단 중 로그아웃 실패: {e}")
+    if reservation_thread and reservation_thread.is_alive():
+        reservation_thread.join(timeout=5)
+    if reservation_thread and not reservation_thread.is_alive():
+        reservation_thread = None
     return jsonify({'message': '예약 프로세스가 중단되었습니다.'})
 
 @app.route('/stream') #241125 실시간 로깅 필요하긴한데... 그냥 써도 무관할듯~

@@ -270,11 +270,11 @@
             .then(response => response.json())
             .then(data => {
                 document.getElementById('results').innerHTML = data.message;
+                startStatusPolling();
             })
             .catch(error => {
                 console.error('Error:', error);
-                isReservationRunning = false;
-                document.getElementById('stopButton').disabled = true;
+                setReservationState(false);
             });
         }
 
@@ -283,8 +283,7 @@
             .then(response => response.json())
             .then(data => {
                 alert(data.message);
-                isReservationRunning = false;
-                document.getElementById('stopButton').disabled = true;
+                setReservationState(false);
                 document.getElementById('results').innerHTML = data.message;
             })
             .catch(error => {
@@ -293,6 +292,41 @@
             });
         }
 
+        let statusPollingTimer = null;
+
+        function setReservationState(isRunning) {
+            isReservationRunning = isRunning;
+            document.getElementById('stopButton').disabled = !isRunning;
+        }
+
+        function startStatusPolling() {
+            if (statusPollingTimer) {
+                return;
+            }
+            statusPollingTimer = setInterval(fetchStatus, 1000);
+            fetchStatus();
+        }
+
+        function stopStatusPolling() {
+            if (statusPollingTimer) {
+                clearInterval(statusPollingTimer);
+                statusPollingTimer = null;
+            }
+        }
+
+        function fetchStatus() {
+            fetch('/status')
+            .then(response => response.json())
+            .then(data => {
+                setReservationState(Boolean(data.running));
+                if (!data.running) {
+                    stopStatusPolling();
+                }
+            })
+            .catch(error => {
+                console.error('Status check error:', error);
+            });
+        }
 
         window.onload = function() {
             var today = new Date();
@@ -330,6 +364,7 @@
             var enableTelegram = document.getElementById('enable_telegram');
             enableTelegram.checked = '{{ telegram_bot_token }}' && '{{ telegram_chat_id }}';
             toggleTelegramFields();
+            fetchStatus();
         }
 
         var outputSource = new EventSource("/stream");
