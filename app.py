@@ -490,7 +490,7 @@ if __name__ == '__main__':
     
     # fileHandler, StreamHandler 생성
     file_max_bytes = 10 * 1024 * 1024 # 10 MB 사이즈
-    logFileHandler = logging.handlers.RotatingFileHandler(filename=log_path, maxBytes=file_max_bytes, backupCount=20, encoding='utf-8')
+    logFileHandler = logging.handlers.RotatingFileHandler(filename=log_path, maxBytes=file_max_bytes, backupCount=5, encoding='utf-8')
     logStreamHandler = logging.StreamHandler()
     
     # handler 에 formatter 설정
